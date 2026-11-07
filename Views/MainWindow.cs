@@ -27,6 +27,9 @@ public sealed class MainWindow : Window
     private readonly TextBlock _summary = new() { Classes = { "muted" }, Margin = new Thickness(2, 0, 0, 12) };
     private bool _pending;
 
+    /// <summary>README screenshots: no banner showing where this copy happens to run from.</summary>
+    public static bool HideSetupBanner { get; set; }
+
     public MainWindow(Toolkit kit, App app)
     {
         _kit = kit;
@@ -235,7 +238,7 @@ public sealed class MainWindow : Window
             _banners.Children.Add(Banner($"A new PAX Toolkit is out (v{Versions.Show(upd.Version)}).", btn));
         }
 
-        if (!SelfUpdate.RunningFromHome && !SelfUpdate.IsDevBuild)
+        if (!SelfUpdate.RunningFromHome && !SelfUpdate.IsDevBuild && !HideSetupBanner)
         {
             var btn = new Button { Content = "Move it there", Classes = { "small" } };
             btn.Click += (_, _) =>

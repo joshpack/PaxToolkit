@@ -109,6 +109,7 @@ internal static class SelfTest
     /// <summary>README picture: real release info from GitHub, made-up install state (nothing is installed).</summary>
     private static async Task ScreenshotAsync()
     {
+        MainWindow.HideSetupBanner = true;
         using var kit = new Toolkit(new Settings { LastCheckUtc = DateTime.UtcNow });
         await kit.CheckAsync();
         var apps = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Apps");
