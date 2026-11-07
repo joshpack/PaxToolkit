@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -335,6 +336,17 @@ public sealed class MainWindow : Window
 
         root.Children.Add(new TextBlock { Text = app.Description, TextWrapping = TextWrapping.Wrap, Foreground = Brush("#C3C8D4"), FontSize = 14, LineHeight = 21, Margin = new Thickness(0, 24, 0, 0) });
 
+        // Its PowerShell one-liner, for a PC without the toolkit.
+        if (app.InstallCommand is { Length: > 0 } cmd)
+        {
+            var card = CommandCard("INSTALL WITH POWERSHELL", cmd,
+                app.IsScript
+                    ? $"Runs the latest {app.Name} straight from GitHub, no install needed. Paste it into PowerShell on any PC."
+                    : $"Installs the latest {app.Name} on any PC. Paste it into PowerShell.");
+            card.Margin = new Thickness(0, 24, 0, 0);
+            root.Children.Add(card);
+        }
+
         // Tray icon switch (apps that have one), straight from the PAX Toolkit link.
         if (app.Tray && e.IsInstalled)
         {
@@ -558,6 +570,8 @@ public sealed class MainWindow : Window
 
         panel.Children.Add(Section("PAX TOOLKIT", startup, tray,
             new TextBlock { Text = "With the tray icon off, PAX Toolkit keeps running and opens when you start it again.", Foreground = Muted, FontSize = 12, TextWrapping = TextWrapping.Wrap }));
+        panel.Children.Add(CommandCard("INSTALL WITH POWERSHELL", ToolkitInstallCommand,
+            "Installs or updates PAX Toolkit on any PC, no admin needed. Paste it into PowerShell."));
         panel.Children.Add(Section("UPDATES", check, auto));
         panel.Children.Add(Section("INSTALLING", shortcuts,
             new TextBlock { Text = "Install folder", Margin = new Thickness(0, 6, 0, 0) },
@@ -581,6 +595,62 @@ public sealed class MainWindow : Window
     }
 
     // ───────────────────────────── helpers ─────────────────────────────
+
+    /// <summary>The toolkit's own one-line installer (install.ps1, via the paxdigi.com short link).</summary>
+    public const string ToolkitInstallCommand = "irm paxdigi.com/toolkit | iex";
+
+    /// <summary>A card with a PowerShell command in a code box and a Copy button.</summary>
+    private Border CommandCard(string label, string command, string note)
+    {
+        var code = new SelectableTextBlock
+        {
+            Text = command, FontFamily = new FontFamily("Cascadia Mono, Consolas, monospace"), FontSize = 13.5,
+            Foreground = Good, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap,
+        };
+        var prompt = new TextBlock { Text = "PS>", FontFamily = code.FontFamily, FontSize = 13.5, Foreground = Muted, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 10, 0) };
+        var copy = new Button { Content = "Copy", Classes = { "small" }, VerticalAlignment = VerticalAlignment.Center, MinWidth = 78, HorizontalContentAlignment = HorizontalAlignment.Center };
+        ToolTip.SetTip(copy, "Copy the command");
+        copy.Click += async (_, _) =>
+        {
+            try
+            {
+                if (Clipboard is { } cb)
+                {
+                    await cb.SetTextAsync(command);
+                    copy.Content = "✓ Copied";
+                    copy.Foreground = Good;
+                }
+            }
+            catch
+            {
+                copy.Content = "Couldn't copy";
+            }
+
+            DispatcherTimer.RunOnce(() =>
+            {
+                copy.Content = "Copy";
+                copy.ClearValue(ForegroundProperty);
+            }, TimeSpan.FromSeconds(2));
+        };
+
+        var line = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
+        line.Children.Add(prompt);
+        Grid.SetColumn(code, 1);
+        line.Children.Add(code);
+        Grid.SetColumn(copy, 2);
+        line.Children.Add(copy);
+        var box = new Border
+        {
+            Background = Brush("#07090D"), BorderBrush = Brush("#1F2636"), BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8), Padding = new Thickness(14, 8, 8, 8), Child = line,
+        };
+
+        var stack = new StackPanel { Spacing = 10 };
+        stack.Children.Add(new TextBlock { Text = label, Classes = { "label" } });
+        stack.Children.Add(box);
+        stack.Children.Add(new TextBlock { Text = note, Foreground = Muted, FontSize = 12, TextWrapping = TextWrapping.Wrap });
+        return new Border { Classes = { "card" }, Child = stack };
+    }
 
     private static Control Section(string label, params Control[] items)
     {

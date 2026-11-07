@@ -73,6 +73,7 @@ internal static class SelfTest
         using var kit = new Toolkit();
         Line($"catalog: {kit.Apps.Count} apps ({string.Join(", ", kit.Apps.Select(a => a.App.Id))})");
         Check("built-in catalog parses", Catalog.Parse(Catalog.ReadBuiltIn())?.Count == kit.Apps.Count);
+        Check("Startup Scanner has its one-liner", kit.Find("PaxStartupScanner")?.App.InstallCommand == "irm paxdigi.com/startup | iex");
         Check("version parse v0.001-beta", Versions.Parse("v0.001-beta") == new Version(0, 1, 0));
         Check("version parse 1.2.0+abc", Versions.Parse("1.2.0+abc") == new Version(1, 2, 0));
 
@@ -189,6 +190,12 @@ internal static class SelfTest
         {
             window.Select(available.App.Id);
             Shot(name + "-available");
+        }
+
+        if (kit.Apps.FirstOrDefault(a => a.App.InstallCommand is { Length: > 0 }) is { } withCommand)
+        {
+            window.Select(withCommand.App.Id);
+            Shot(name + "-command");
         }
 
         window.ShowSettings();

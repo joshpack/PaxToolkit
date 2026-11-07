@@ -39,6 +39,9 @@ public sealed class CatalogApp
     /// <summary>The app has a tray icon the toolkit can turn on and off (PAX App Standard link).</summary>
     public bool Tray { get; set; }
 
+    /// <summary>A PowerShell one-liner that installs or runs the app without the toolkit (shown with a Copy button). Null = none.</summary>
+    public string? InstallCommand { get; set; }
+
     /// <summary>Ask for admin rights when starting it.</summary>
     public bool Elevate { get; set; }
 
