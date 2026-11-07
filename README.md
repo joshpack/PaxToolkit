@@ -39,9 +39,25 @@ One app for all the PAX apps. PAX Toolkit lists every PAX app on GitHub, install
 
 ## Install
 
+### One line in PowerShell
+
+```powershell
+irm paxdigi.com/toolkit | iex
+```
+
+No admin needed. It downloads the latest release, checks its SHA-256, puts `PaxToolkit.exe` in `%USERPROFILE%\Apps\PaxToolkit`, adds a Start menu shortcut (*Start → PAX Toolkit*) and starts it. Run it again to update. The short address forwards to [`install.ps1`](install.ps1) in this repo; the full address works too:
+
+```powershell
+irm https://raw.githubusercontent.com/joshpack/PaxToolkit/main/install.ps1 | iex
+```
+
+Options go in environment variables first, for example `$env:PAXTK_HOME = 'D:\Tools\PaxToolkit'; irm paxdigi.com/toolkit | iex` (also `PAXTK_NOSTART=1`, `PAXTK_NOSHORTCUT=1`).
+
+### By hand
+
 1. Download `PaxToolkit-<version>-win-x64.zip` from [Releases](https://github.com/joshpack/PaxToolkit/releases) and unzip it.
 2. Run `PaxToolkit.exe`. It is a single self-contained file, so no .NET install is needed.
-3. Click **Move it there** on the banner to keep it in `%USERPROFILE%\Apps\PaxToolkit` with a Start menu shortcut, and tick *Start PAX Toolkit with Windows* under **Settings** if you want the tray icon at sign-in.
+3. Click **Move it there** under **Settings** to keep it in `%USERPROFILE%\Apps\PaxToolkit` with a Start menu shortcut, and tick *Start PAX Toolkit with Windows* if you want the tray icon at sign-in.
 
 ## Command line
 
