@@ -17,51 +17,19 @@ public static class AppIcon
 
     public static Bitmap Render(int size, bool badge = false)
     {
+        // The toolbox (see BrandIcon), plus a badge when updates are waiting.
         var tile = new Grid { Width = size, Height = size };
-        tile.Children.Add(new Border
-        {
-            CornerRadius = new CornerRadius(size * 0.22),
-            Background = Gradient("#00C8FF", "#19F58C"),
-        });
-
-        // 100x100 artwork: 2x2 grid of rounded squares, the last one an outlined "+" slot.
-        var art = new Canvas { Width = 100, Height = 100 };
-        void Square(double x, double y)
-        {
-            var r = new Rectangle { Width = 34, Height = 34, RadiusX = 8, RadiusY = 8, Fill = new SolidColorBrush(Dark) };
-            Canvas.SetLeft(r, x);
-            Canvas.SetTop(r, y);
-            art.Children.Add(r);
-        }
-
-        Square(12, 12);
-        Square(54, 12);
-        Square(12, 54);
-        var slot = new Rectangle
-        {
-            Width = 30, Height = 30, RadiusX = 7, RadiusY = 7, Stroke = new SolidColorBrush(Dark), StrokeThickness = 5,
-        };
-        Canvas.SetLeft(slot, 56);
-        Canvas.SetTop(slot, 56);
-        art.Children.Add(slot);
-        art.Children.Add(new ShapePath
-        {
-            Data = Geometry.Parse("M71,63 L71,79 M63,71 L79,71"),
-            Stroke = new SolidColorBrush(Dark),
-            StrokeThickness = 5,
-            StrokeLineCap = PenLineCap.Round,
-        });
-        tile.Children.Add(new Viewbox { Margin = new Thickness(size * 0.08), Child = art });
+        tile.Children.Add(BrandIcon.Build(size));
 
         if (badge)
         {
-            // An update is waiting: an orange dot in the corner.
+            // An update is waiting: a green dot in the corner.
             tile.Children.Add(new Ellipse
             {
                 Width = size * 0.42, Height = size * 0.42,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top,
-                Fill = new SolidColorBrush(Color.Parse("#FF9F1C")),
+                Fill = new SolidColorBrush(Color.Parse("#19F58C")),
                 Stroke = new SolidColorBrush(Color.Parse("#0E1015")),
                 StrokeThickness = size * 0.06,
             });

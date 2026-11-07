@@ -8,7 +8,7 @@ One app for all the PAX apps. PAX Toolkit lists every PAX app on GitHub, turns t
 
 - **One switch per app.** Turn an app on and the toolkit downloads its latest release from GitHub, checks the SHA-256 checksum when the release has one, and installs it to `%USERPROFILE%\Apps\<App>`. Turn it off and the app is closed and removed. Its settings stay, so turning it back on picks up where you left off.
 - **Updates.** The toolkit checks GitHub every 6 hours (or when you click *Check for updates*), marks apps with a new version and updates them one at a time or all at once. A running app is closed for the update and started again afterwards. You can let it install updates on its own.
-- **Tray icon.** Every app you've turned on is in the tray menu: start it, start it in its own tray, close it, update it, or open its folder. An orange dot on the icon means updates are waiting.
+- **Tray icon.** Every app you've turned on is in the tray menu: start it, start it in its own tray, close it, update it, or open its folder. A green dot on the icon means updates are waiting.
 - **Finds what you already have.** Apps already in your Apps folder, or installed with their own setup, show up as on.
 - **.NET check.** If an app needs a .NET runtime you don't have, its card says so and can install it with winget.
 - **Start menu shortcuts** in *Start → PAX Toolkit* for each app (optional).
