@@ -53,6 +53,23 @@ internal static class SelfTest
             if (Environment.GetEnvironmentVariable(v) is not { Length: > 0 })
                 throw new InvalidOperationException($"{v} must point at a test folder.");
 
+        // PAX App Standard link: the tray switch round-trips through toolkit.json without touching other apps' entries.
+        if (Environment.GetEnvironmentVariable("PAX_SHARED_DIR") is not { Length: > 0 })
+            throw new InvalidOperationException("PAX_SHARED_DIR must point at a test folder.");
+        Check("tray icon on by default", PaxStandard.PaxLink.TrayIconVisible("PaxAudioSwitcher"));
+        PaxStandard.PaxLink.SetTrayIconVisible("PaxAudioSwitcher", false);
+        PaxStandard.PaxLink.SetTrayIconVisible("PaxChatterGuard", true);
+        Check("tray icon switched off", !PaxStandard.PaxLink.TrayIconVisible("PaxAudioSwitcher"));
+        Check("other app untouched", PaxStandard.PaxLink.TrayIconVisible("PaxChatterGuard"));
+        var fired = new TaskCompletionSource();
+        using (PaxStandard.PaxLink.Watch(() => fired.TrySetResult()))
+        {
+            PaxStandard.PaxLink.SetTrayIconVisible("PaxAudioSwitcher", true);
+            Check("watcher fires on change", await Task.WhenAny(fired.Task, Task.Delay(3000)) == fired.Task);
+        }
+
+        Check("tray icon back on", PaxStandard.PaxLink.TrayIconVisible("PaxAudioSwitcher"));
+
         using var kit = new Toolkit();
         Line($"catalog: {kit.Apps.Count} apps ({string.Join(", ", kit.Apps.Select(a => a.App.Id))})");
         Check("built-in catalog parses", Catalog.Parse(Catalog.ReadBuiltIn())?.Count == kit.Apps.Count);
@@ -146,27 +163,37 @@ internal static class SelfTest
             Position = new PixelPoint(-30000, -30000),
             ShowActivated = false,
             ShowInTaskbar = false,
-            Width = 1040,
-            Height = 1180,
+            Width = 1000,
+            Height = 680,
         };
         window.Show();
-        window.Refresh();
-        window.UpdateLayout();
-        using var bmp = new RenderTargetBitmap(new PixelSize(1040, 1180));
-        bmp.Render(window);
-        bmp.Save(Path.Combine(Dir!, name + ".png"));
-        foreach (var tab in window.GetLogicalDescendants<TabControl>())
+
+        void Shot(string file)
         {
-            tab.SelectedIndex = 1;
             window.UpdateLayout();
-            using var b2 = new RenderTargetBitmap(new PixelSize(1040, 760));
-            b2.Render(window);
-            b2.Save(Path.Combine(Dir!, name + "-settings.png"));
-            break;
+            using var bmp = new RenderTargetBitmap(new PixelSize(1000, 680));
+            bmp.Render(window);
+            bmp.Save(Path.Combine(Dir!, file + ".png"));
+            Line($"rendered {file}.png");
         }
 
+        // An installed app (one with a tray switch if there is one), an available one, and Settings.
+        var installed = kit.Apps.FirstOrDefault(a => a.IsInstalled && a.App.Tray) ?? kit.Apps.FirstOrDefault(a => a.IsInstalled);
+        if (installed is not null)
+        {
+            window.Select(installed.App.Id);
+            Shot(name);
+        }
+
+        if (kit.Apps.FirstOrDefault(a => !a.IsInstalled && a.Download is not null) is { } available)
+        {
+            window.Select(available.App.Id);
+            Shot(name + "-available");
+        }
+
+        window.ShowSettings();
+        Shot(name + "-settings");
         window.Close();
-        Line($"rendered {name}.png");
     }
 
     /// <summary>Calls another PAX app's static AppIcon.Create(int) from its dll and saves the picture.</summary>

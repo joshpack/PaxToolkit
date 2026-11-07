@@ -36,6 +36,9 @@ public sealed class CatalogApp
     /// <summary>Script apps: extra arguments for the GUI mode. Null = no GUI.</summary>
     public string? GuiArgs { get; set; }
 
+    /// <summary>The app has a tray icon the toolkit can turn on and off (PAX App Standard link).</summary>
+    public bool Tray { get; set; }
+
     /// <summary>Ask for admin rights when starting it.</summary>
     public bool Elevate { get; set; }
 

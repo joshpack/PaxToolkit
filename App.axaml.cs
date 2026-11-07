@@ -21,6 +21,7 @@ public partial class App : Application
     private bool? _shownBadge;
     private readonly CancellationTokenSource _quit = new();
     private DispatcherTimer? _trayRefresh;
+    private IDisposable? _linkWatch;
 
     public Toolkit Kit => _kit;
 
@@ -32,6 +33,8 @@ public partial class App : Application
         {
             _lifetime = lifetime;
             lifetime.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            PaxStandard.PaxChrome.Configure("PaxToolkit", Paths.Data);
+            Styles.Add(PaxStandard.PaxChrome.Styles());
 
             if (SelfTest.Dir is not null)
             {
@@ -50,10 +53,13 @@ public partial class App : Application
 
             _icon = AppIcon.Window();
             _badgeIcon = AppIcon.Window(badge: true);
-            _tray = new TrayIcon { Icon = _icon, ToolTipText = "PAX Toolkit" };
+            _tray = new TrayIcon { Icon = _icon, ToolTipText = "PAX Toolkit", IsVisible = PaxStandard.PaxLink.TrayIconVisible("PaxToolkit") };
             _tray.Clicked += (_, _) => OpenWindow();
             TrayIcon.SetIcons(this, new TrayIcons { _tray });
             UpdateTray();
+            // PAX App Standard: the tray icon follows the shared switch (Settings here, or toolkit.json).
+            _linkWatch = PaxStandard.PaxLink.Watch(() => Dispatcher.UIThread.Post(() =>
+                _tray.IsVisible = PaxStandard.PaxLink.TrayIconVisible("PaxToolkit")));
 
             _ = Task.Run(ListenForCommands);
 

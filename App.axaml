@@ -270,5 +270,48 @@
       <Setter Property="Background" Value="#0C2230" />
       <Setter Property="BorderBrush" Value="#1E5B75" />
     </Style>
+
+    <!-- Sidebar rows -->
+    <Style Selector="Border.row">
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="Margin" Value="8,1" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Border.row:pointerover">
+      <Setter Property="Background" Value="#141923" />
+    </Style>
+    <Style Selector="Border.row.selected">
+      <Setter Property="Background" Value="#18202C" />
+    </Style>
+    <Style Selector="TextBlock.section">
+      <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+      <Setter Property="FontSize" Value="10.5" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="LetterSpacing" Value="1.2" />
+      <Setter Property="Margin" Value="20,16,0,6" />
+    </Style>
+    <Style Selector="Button.big">
+      <Setter Property="MinHeight" Value="42" />
+      <Setter Property="Padding" Value="26,8" />
+      <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style Selector="Button.link">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="#8FB8FF" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Foreground" Value="#C2D8FF" />
+      <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
+    </Style>
+    <Style Selector="Button.link.danger">
+      <Setter Property="Foreground" Value="#F2878A" />
+    </Style>
   </Application.Styles>
 </Application>

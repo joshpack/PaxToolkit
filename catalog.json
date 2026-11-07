@@ -17,6 +17,7 @@
     },
     {
       "id": "PaxMediaManager",
+      "tray": true,
       "name": "PAX Media Manager",
       "tagline": "Downloads, library and player",
       "description": "Moves finished torrents where they belong, builds a poster library and plays your videos and pictures.",
@@ -33,6 +34,7 @@
     },
     {
       "id": "PaxAudioSwitcher",
+      "tray": true,
       "name": "PAX Audio Switcher",
       "tagline": "Audio device hotkeys",
       "description": "Switch speakers, headsets and microphones with a hotkey, or automatically when a game starts.",
@@ -46,6 +48,7 @@
     },
     {
       "id": "PaxAutoClicker",
+      "tray": true,
       "name": "PAX Auto Clicker",
       "tagline": "Hotkey auto clicker",
       "description": "Tray auto clicker: toggle with a hotkey or hold to spam, with chimes you can hear over full-screen games.",
@@ -59,6 +62,7 @@
     },
     {
       "id": "PaxChatterGuard",
+      "tray": true,
       "name": "PAX Chatter Guard",
       "tagline": "Keyboard chatter filter",
       "description": "Stops worn keys and mouse buttons from double-typing, with a monitor that suggests the right delay.",
