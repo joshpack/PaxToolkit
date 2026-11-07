@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO.Pipes;
 using Avalonia;
+using Avalonia.Headless;
 
 namespace PaxToolkit;
 
@@ -22,7 +23,11 @@ internal static class Program
         {
             SelfTest.Dir = args[test + 1];
             SelfTest.Args = args;
-            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            // Headless: windows given a far-off position still flash on screen for a moment on the real platform.
+            AppBuilder.Configure<App>()
+                .UseSkia()
+                .UseHeadless(new Avalonia.Headless.AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
+                .StartWithClassicDesktopLifetime(args);
             return SelfTest.ExitCode;
         }
 

@@ -12,4 +12,4 @@ Every PAX app follows these rules.
 
 Avalonia apps copy [`PaxStandard.cs`](PaxStandard.cs) unchanged. Auto Clicker (WinForms) and Startup Scanner (PowerShell/WPF) follow the same rules in their own toolkit.
 
-Status: draft. `PaxStandard.cs` has not been compiled into any app yet.
+Tests render windows with Avalonia.Headless only: a window moved far off screen still flashes on screen for a moment.

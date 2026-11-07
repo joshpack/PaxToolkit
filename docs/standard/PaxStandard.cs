@@ -4,7 +4,7 @@
 // - PaxLink: the PAX Toolkit link. %APPDATA%\PAX\toolkit.json says whether each app shows its tray icon; the app
 //   watches it and shows/hides the icon live. PAX_SHARED_DIR overrides the folder (tests).
 // Call PaxChrome.Configure(appId, dataDir) once at start-up, and add PaxChrome.Styles() to Application.Styles.
-// STATUS: draft, not yet compiled into any app.
+// Canonical copy: lives in joshpack/PaxToolkit docs/standard; apps copy it unchanged.
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -59,6 +59,8 @@ public static class PaxChrome
                 ((Avalonia.Controls.Shapes.Path)max.Content!).Data = Geometry.Parse(m ? RestoreGlyph : MaximizeGlyph);
                 w.Padding = m ? w.OffScreenMargin : default;
             };
+            // A window restored as maximized gets its state before it is shown, when OffScreenMargin is still 0.
+            w.Resized += (_, _) => w.Padding = w.WindowState == WindowState.Maximized ? w.OffScreenMargin : default;
             buttons.Children.Add(max);
         }
 
@@ -169,7 +171,18 @@ public static class PaxChrome
             }
         }
 
-        w.Opened += (_, _) => ready = true;
+        w.Opened += (_, _) =>
+        {
+            ready = true;
+            // Start from where the window opened, so a first resize or maximize doesn't save a 0,0 position.
+            if (w.WindowState == WindowState.Normal)
+            {
+                cur.X = w.Position.X;
+                cur.Y = w.Position.Y;
+                cur.Width = w.ClientSize.Width;
+                cur.Height = w.ClientSize.Height;
+            }
+        };
         w.PositionChanged += (_, e) => { if (w.WindowState == WindowState.Normal) { cur.X = e.Point.X; cur.Y = e.Point.Y; Save(); } };
         w.Resized += (_, e) => { if (w.WindowState == WindowState.Normal && e.ClientSize.Width > 50) { cur.Width = e.ClientSize.Width; cur.Height = e.ClientSize.Height; Save(); } };
         w.PropertyChanged += (_, e) =>
@@ -208,7 +221,7 @@ public static class PaxLink
 
     /// <summary>Whether the app shows its tray icon (true unless the Toolkit or the app turned it off).</summary>
     public static bool TrayIconVisible(string appId) =>
-        Read()?["apps"]?[appId]?["trayIcon"]?.GetValue<bool>() ?? true;
+        Read()?["apps"]?[appId]?["trayIcon"] is JsonValue v && v.TryGetValue(out bool on) ? on : true;
 
     public static void SetTrayIconVisible(string appId, bool visible)
     {
@@ -249,6 +262,7 @@ public static class PaxLink
 
         w.Changed += Fire;
         w.Created += Fire;
+        w.Deleted += Fire;
         w.Renamed += (s, e) => Fire(s, e);
         w.EnableRaisingEvents = true;
         return w;

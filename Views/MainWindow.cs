@@ -380,7 +380,11 @@ public sealed class MainWindow : Window
             Fact("Latest", V(ce, Warn));
         if (e.InstallDir is { } dir)
         {
-            var open = new Button { Content = Shorten(dir), Classes = { "link" }, HorizontalAlignment = HorizontalAlignment.Left };
+            var open = new Button
+            {
+                Content = new TextBlock { Text = Shorten(dir), TextTrimming = TextTrimming.PathSegmentEllipsis, FontSize = 12.5 },
+                Classes = { "link" }, HorizontalAlignment = HorizontalAlignment.Left, MaxWidth = 460,
+            };
             ToolTip.SetTip(open, "Open folder");
             open.Click += (_, _) => _kit.OpenFolder(e);
             Fact("Location", open);
