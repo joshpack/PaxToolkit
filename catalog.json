@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "apps": [
+    {
+      "id": "PaxCommander",
+      "name": "PAX Commander",
+      "tagline": "File manager",
+      "description": "Dual-pane file manager with tabs, fast search, previews, FTP/SFTP and a built-in terminal.",
+      "repo": "joshpack/PaxCommander",
+      "kind": "zip",
+      "asset": "^PaxCommander-.*-win-x64-portable\\.zip$",
+      "exe": "PaxCommander.exe",
+      "folder": "PaxCommander",
+      "color": "#89CFF0",
+      "knownPaths": [ "%LOCALAPPDATA%\\Programs\\PAX Commander\\PaxCommander.exe" ],
+      "uninstall": "PaxCommander.exe --uninstall --quiet"
+    },
+    {
+      "id": "PaxMediaManager",
+      "name": "PAX Media Manager",
+      "tagline": "Downloads, library and player",
+      "description": "Moves finished torrents where they belong, builds a poster library and plays your videos and pictures.",
+      "repo": "joshpack/PaxMediaManager",
+      "kind": "zip",
+      "asset": "^PaxMediaManager-.*-win-x64-portable\\.zip$",
+      "exe": "PaxMediaManager.exe",
+      "folder": "PaxMediaManager",
+      "openArgs": "--show",
+      "trayArgs": "",
+      "color": "#B26BFF",
+      "knownPaths": [ "%LOCALAPPDATA%\\Programs\\PAX Media Manager\\PaxMediaManager.exe" ],
+      "uninstall": "uninstall.cmd"
+    },
+    {
+      "id": "PaxAudioSwitcher",
+      "name": "PAX Audio Switcher",
+      "tagline": "Audio device hotkeys",
+      "description": "Switch speakers, headsets and microphones with a hotkey, or automatically when a game starts.",
+      "repo": "joshpack/PaxAudioSwitcher",
+      "kind": "zip",
+      "asset": "^PaxAudioSwitcher-.*-win-x64\\.zip$",
+      "exe": "PaxAudioSwitcher.exe",
+      "folder": "PaxAudioSwitcher",
+      "trayArgs": "--minimized",
+      "color": "#19F58C"
+    },
+    {
+      "id": "PaxAutoClicker",
+      "name": "PAX Auto Clicker",
+      "tagline": "Hotkey auto clicker",
+      "description": "Tray auto clicker: toggle with a hotkey or hold to spam, with chimes you can hear over full-screen games.",
+      "repo": "joshpack/PaxAutoClicker",
+      "kind": "zip",
+      "asset": "^PaxAutoClicker-.*-win-x64\\.zip$",
+      "exe": "PaxAutoClicker.exe",
+      "folder": "PaxAutoClicker",
+      "trayArgs": "--autostart",
+      "color": "#E05CFF"
+    },
+    {
+      "id": "PaxChatterGuard",
+      "name": "PAX Chatter Guard",
+      "tagline": "Keyboard chatter filter",
+      "description": "Stops worn keys and mouse buttons from double-typing, with a monitor that suggests the right delay.",
+      "repo": "joshpack/PaxChatterGuard",
+      "kind": "zip",
+      "asset": "^PaxChatterGuard-.*-win-x64\\.zip$",
+      "exe": "PaxChatterGuard.exe",
+      "folder": "PaxChatterGuard",
+      "trayArgs": "--minimized",
+      "color": "#00C8FF"
+    },
+    {
+      "id": "PaxStartupScanner",
+      "name": "PAX Startup Scanner",
+      "tagline": "Startup items and boot time",
+      "description": "Finds everything that starts with Windows, flags suspicious entries and shows what slows boot. Runs as admin.",
+      "repo": "joshpack/PaxStartupScanner",
+      "kind": "script",
+      "asset": "^PaxStartupScanner\\.ps1$",
+      "exe": "PaxStartupScanner.ps1",
+      "folder": "PaxStartupScanner",
+      "guiArgs": "-Gui",
+      "elevate": true,
+      "color": "#F5B14C"
+    },
+    {
+      "id": "PaxWatermark",
+      "name": "PAX Watermark",
+      "tagline": "Watermark photos",
+      "description": "Drag a watermark over a photo, set position, size, opacity and rotation, then stamp one picture or a whole folder.",
+      "repo": "joshpack/pax_watermark",
+      "kind": "zip",
+      "asset": "^PaxWatermark-.*-win-x64\\.zip$",
+      "exe": "PaxWatermark.exe",
+      "folder": "PaxWatermark",
+      "color": "#FF7A6B"
+    },
+    {
+      "id": "PaxDiagnostics",
+      "name": "PAX Diagnostics",
+      "tagline": "Windows diagnostics",
+      "description": "System info at a glance, plus SFC and DISM repairs and a CBS log filter that pulls out what was fixed.",
+      "repo": "joshpack/Pax_Diagnostics",
+      "kind": "zip",
+      "asset": "^PaxDiagnostics-.*-win-x64\\.zip$",
+      "exe": "PaxDiagnostics.exe",
+      "folder": "PaxDiagnostics",
+      "color": "#4DA3FF"
+    }
+  ]
+}
