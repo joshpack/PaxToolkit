@@ -31,6 +31,7 @@ One app for all the PAX apps. PAX Toolkit lists every PAX app on GitHub, install
 | [PAX Watermark](https://github.com/joshpack/pax_watermark) | Watermark one photo or a whole folder |
 | [PAX Diagnostics](https://github.com/joshpack/Pax_Diagnostics) | System info, SFC/DISM repairs, CBS log filter |
 | [PAX Windows Tweaks](https://github.com/joshpack/PaxWindowsTweaks) | Tweaks with undo, debloat, winget installer, fixes, update modes, DNS |
+| [PAX Event Viewer](https://github.com/joshpack/PaxEventViewer) | PC snapshot for tickets, event logs in plain English |
 
 ## Supported systems
 

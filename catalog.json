@@ -125,6 +125,18 @@
       "folder": "PaxWindowsTweaks",
       "elevate": true,
       "color": "#8C7CFF"
+    },
+    {
+      "id": "PaxEventViewer",
+      "name": "PAX Event Viewer",
+      "tagline": "What happened to this PC",
+      "description": "Ticket-ready PC snapshot plus the event logs in plain English: blue screens, crashes, disk errors, failed updates, with what to try.",
+      "repo": "joshpack/PaxEventViewer",
+      "kind": "zip",
+      "asset": "^PaxEventViewer-.*-win-x64\\.zip$",
+      "exe": "PaxEventViewer.exe",
+      "folder": "PaxEventViewer",
+      "color": "#FF7A45"
     }
   ]
 }
