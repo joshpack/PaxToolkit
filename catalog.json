@@ -12,6 +12,7 @@
       "exe": "PaxCommander.exe",
       "folder": "PaxCommander",
       "color": "#89CFF0",
+      "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxCommander.png",
       "knownPaths": [ "%LOCALAPPDATA%\\Programs\\PAX Commander\\PaxCommander.exe" ],
       "uninstall": "PaxCommander.exe --uninstall --quiet"
     },
@@ -29,6 +30,7 @@
       "openArgs": "--show",
       "trayArgs": "",
       "color": "#B26BFF",
+      "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxMediaManager.png",
       "knownPaths": [ "%LOCALAPPDATA%\\Programs\\PAX Media Manager\\PaxMediaManager.exe" ],
       "uninstall": "uninstall.cmd"
     },
@@ -44,7 +46,8 @@
       "exe": "PaxAudioSwitcher.exe",
       "folder": "PaxAudioSwitcher",
       "trayArgs": "--minimized",
-      "color": "#19F58C"
+      "color": "#19F58C",
+      "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxAudioSwitcher.png"
     },
     {
       "id": "PaxAutoClicker",
@@ -58,7 +61,8 @@
       "exe": "PaxAutoClicker.exe",
       "folder": "PaxAutoClicker",
       "trayArgs": "--autostart",
-      "color": "#E05CFF"
+      "color": "#E05CFF",
+      "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxAutoClicker.png"
     },
     {
       "id": "PaxChatterGuard",
@@ -72,7 +76,8 @@
       "exe": "PaxChatterGuard.exe",
       "folder": "PaxChatterGuard",
       "trayArgs": "--minimized",
-      "color": "#00C8FF"
+      "color": "#00C8FF",
+      "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxChatterGuard.png"
     },
     {
       "id": "PaxStartupScanner",
@@ -87,7 +92,8 @@
       "guiArgs": "-Gui",
       "elevate": true,
       "installCommand": "irm paxdigi.com/startup | iex",
-      "color": "#F5B14C"
+      "color": "#F5B14C",
+      "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxStartupScanner.png"
     },
     {
       "id": "PaxWatermark",
@@ -99,7 +105,8 @@
       "asset": "^PaxWatermark-.*-win-x64\\.zip$",
       "exe": "PaxWatermark.exe",
       "folder": "PaxWatermark",
-      "color": "#FF7A6B"
+      "color": "#FF7A6B",
+      "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxWatermark.png"
     },
     {
       "id": "PaxDiagnostics",
@@ -111,7 +118,8 @@
       "asset": "^PaxDiagnostics-.*-win-x64\\.zip$",
       "exe": "PaxDiagnostics.exe",
       "folder": "PaxDiagnostics",
-      "color": "#4DA3FF"
+      "color": "#4DA3FF",
+      "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxDiagnostics.png"
     },
     {
       "id": "PaxWindowsTweaks",
@@ -124,7 +132,8 @@
       "exe": "PaxWindowsTweaks.exe",
       "folder": "PaxWindowsTweaks",
       "elevate": true,
-      "color": "#8C7CFF"
+      "color": "#8C7CFF",
+      "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxWindowsTweaks.png"
     },
     {
       "id": "PaxEventViewer",
@@ -136,7 +145,8 @@
       "asset": "^PaxEventViewer-.*-win-x64\\.zip$",
       "exe": "PaxEventViewer.exe",
       "folder": "PaxEventViewer",
-      "color": "#FF7A45"
+      "color": "#FF7A45",
+      "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxEventViewer.png"
     }
   ]
 }

@@ -77,6 +77,18 @@ internal static class SelfTest
         Check("version parse v0.001-beta", Versions.Parse("v0.001-beta") == new Version(0, 1, 0));
         Check("version parse 1.2.0+abc", Versions.Parse("1.2.0+abc") == new Version(1, 2, 0));
 
+        // Icons come from the catalog's iconUrl, so apps added later get theirs in older toolkits too.
+        Check("every catalog app has a GitHub icon URL", kit.Apps.All(a => Views.Icons.UsableUrl(a.App.IconUrl)));
+        Check("non-GitHub icon URLs are refused", !Views.Icons.UsableUrl("https://example.com/x.png") && !Views.Icons.UsableUrl("http://raw.githubusercontent.com/x.png"));
+        var ev = kit.Find("PaxEventViewer")?.App;
+        if (ev is not null)
+        {
+            var got = await Views.Icons.FetchAsync(ev);
+            var cached = Path.Combine(Paths.Data, "icons", "PaxEventViewer.png");
+            Check($"Event Viewer icon downloads and is cached ({(got is null ? "none" : $"{got.PixelSize.Width}x{got.PixelSize.Height}")})", got is not null && File.Exists(cached));
+        }
+        var bad = new CatalogApp { Id = "IconTestMissing", Name = "Icon Test", IconUrl = "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/does-not-exist.png" };
+        Check("a missing icon falls back (no picture, no crash)", await Views.Icons.FetchAsync(bad) is null && Views.Icons.For(bad) is not null);
         await kit.CheckAsync();
         Line("check error: " + (kit.LastCheckError ?? "none"));
         foreach (var e in kit.Apps)

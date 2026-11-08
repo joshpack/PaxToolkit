@@ -193,7 +193,7 @@ public sealed class MainWindow : Window
         texts.Children.Add(subText);
 
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
-        grid.Children.Add(new Image { Source = Icons.For(e.App), Width = 36, Height = 36 });
+        grid.Children.Add(Icons.Image(e.App, 36));
         Grid.SetColumn(texts, 1);
         grid.Children.Add(texts);
         if (e.UpdateAvailable || e.IsRunning)
@@ -273,7 +273,7 @@ public sealed class MainWindow : Window
 
         // Header: icon, name, tagline, status pill.
         var head = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
-        head.Children.Add(new Image { Source = Icons.For(app), Width = 76, Height = 76 });
+        head.Children.Add(Icons.Image(app, 76));
         var titles = new StackPanel { Margin = new Thickness(20, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, Spacing = 4 };
         titles.Children.Add(new TextBlock { Text = app.Name, FontSize = 26, FontWeight = FontWeight.Bold, Foreground = Text });
         var tagRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
