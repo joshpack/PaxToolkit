@@ -112,6 +112,19 @@
       "exe": "PaxDiagnostics.exe",
       "folder": "PaxDiagnostics",
       "color": "#4DA3FF"
+    },
+    {
+      "id": "PaxWindowsTweaks",
+      "name": "PAX Windows Tweaks",
+      "tagline": "Tune and debloat Windows",
+      "description": "Privacy and performance tweaks with real undo, Windows preferences, app removal, a winget installer, fixes, update modes and DNS. Runs as admin.",
+      "repo": "joshpack/PaxWindowsTweaks",
+      "kind": "zip",
+      "asset": "^PaxWindowsTweaks-.*-win-x64\\.zip$",
+      "exe": "PaxWindowsTweaks.exe",
+      "folder": "PaxWindowsTweaks",
+      "elevate": true,
+      "color": "#8C7CFF"
     }
   ]
 }
