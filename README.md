@@ -56,7 +56,7 @@ No admin needed. It downloads the latest release, checks its SHA-256, puts `pxdT
 irm pxdtek.com/tk | iex
 ```
 
-On its own (also `irm pxdtek.com/i | iex`), the same script installs nothing: it lists the pxd apps that have a PowerShell edition, shows whether each is installed on this PC (and whether an update is out), and runs them in memory. Nothing is saved on the PC, and the tools it runs are told to save nothing either (they only write a file when you ask them to save one). The script is [`install.ps1`](install.ps1); the full address works too:
+On its own (also `irm pxdtek.com/i | iex`), the same script installs nothing unless you pick pxd Toolkit in its list and answer yes: it lists the pxd apps that have a PowerShell edition, shows whether each is installed on this PC (and whether an update is out), and runs them in memory. Nothing is saved on the PC, and the tools it runs are told to save nothing either (they only write a file when you ask them to save one). The script is [`install.ps1`](install.ps1); the full address works too:
 
 ```powershell
 irm https://raw.githubusercontent.com/joshpack/pxdToolkit/main/install.ps1 | iex
