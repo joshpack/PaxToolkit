@@ -378,12 +378,15 @@ param([switch]$Install)
             if ($r.Path -and $r.Latest -and $r.Have -and (Test-Newer $r.Latest $r.Have)) { $status += ", v$($r.Latest) out"; $color = 'Yellow' }
             Write-Host $status.PadRight(28) -NoNewline -ForegroundColor $color
             if ($r.Code) { Write-Host "irm pxdtek.com/$($r.Code)|iex" -ForegroundColor DarkCyan }
-            else { Write-Host 'the app (see below to install it)' -ForegroundColor DarkGray }
+            else { Write-Host 'the app: install it below' -ForegroundColor DarkGray }
         }
         Write-Host ''
-        Say '  Pick a tool to run it here; nothing is installed or left behind.' 'DarkGray'
-        Say "  To install the pxd Toolkit app: $installCmd" 'DarkGray'
-        Say '  (or download it from github.com/joshpack/pxdToolkit/releases; other apps install from its window)' 'DarkGray'
+        Say '  Tools run in this window. Nothing is installed or saved.' 'DarkGray'
+        Write-Host ''
+        Say '  Install the pxd Toolkit app:' 'Gray'
+        Say "    $installCmd" 'DarkCyan'
+        Say '    or download it: github.com/joshpack/pxdToolkit/releases' 'DarkGray'
+        Say '  Other apps install from the Toolkit window.' 'DarkGray'
         Write-Host ''
         $rows
     }
