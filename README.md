@@ -45,7 +45,7 @@ One app for all the pxd apps. pxd Toolkit lists every pxd app on GitHub, install
 ### Install with PowerShell
 
 ```powershell
-& ([scriptblock]::Create((irm pxdtek.com/tk))) -Install
+irm pxdtek.com/tk/install | iex
 ```
 
 No admin needed. It downloads the latest release, checks its SHA-256, puts `pxdToolkit.exe` in `%USERPROFILE%\Apps\pxdToolkit`, adds a Start menu shortcut (*Start → pxd Toolkit*) and starts it in the tray. Its window opens only if you answer yes when it asks. Run it again to update. Options go in environment variables first, for example `$env:PXDTK_HOME = 'D:\Tools\pxdToolkit'` (also `PXDTK_NOSTART=1`, `PXDTK_NOSHORTCUT=1`).

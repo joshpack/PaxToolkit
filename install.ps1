@@ -7,7 +7,8 @@
 
     To install the pxd Toolkit app itself (download, SHA-256 check, %USERPROFILE%\Apps\pxdToolkit, Start menu
     shortcut, started in the tray; its window opens only if you say so):
-      & ([scriptblock]::Create((irm pxdtek.com/tk))) -Install
+      irm pxdtek.com/tk/install|iex
+    (the same as: & ([scriptblock]::Create((irm pxdtek.com/tk))) -Install)
     or download it from https://github.com/joshpack/pxdToolkit/releases. Other apps install from the Toolkit's window.
 
     -Install options (environment variables):
@@ -25,7 +26,7 @@ param([switch]$Install)
     try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch { }
 
     $managerVersion = '1.2.0'
-    $installCmd = '& ([scriptblock]::Create((irm pxdtek.com/tk))) -Install'
+    $installCmd = 'irm pxdtek.com/tk/install|iex'
 
     function Say([string]$Text, [string]$Color = 'Gray') { Write-Host $Text -ForegroundColor $Color }
 

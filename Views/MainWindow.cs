@@ -627,7 +627,7 @@ public sealed class MainWindow : Window
     public const string ToolkitConsoleCommand = "irm pxdtek.com/tk | iex";
 
     /// <summary>The same script with -Install: installs (or updates) the pxd Toolkit app.</summary>
-    public const string ToolkitInstallCommand = "& ([scriptblock]::Create((irm pxdtek.com/tk))) -Install";
+    public const string ToolkitInstallCommand = "irm pxdtek.com/tk/install | iex";
 
     // ───────────────────────────── PowerShell one-liners ─────────────────────────────
 
