@@ -211,6 +211,97 @@ param([switch]$Install)
         return
     }
 
+
+    # ---- system info beside the logo ---------------------------------------------------------------------------------
+    # Read-only: CIM, the network adapters and pxdtek.com/ip (the address this PC is seen from). Nothing is saved.
+    function Get-SysLines {
+        $L = New-Object System.Collections.Generic.List[object]
+        function Add([string]$k, [string]$v) { if ($v) { $L.Add(@(($k.PadRight(10) + $v), 'Gray')) } }
+        $os = $cs = $cpu = $null
+        try { $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop } catch { }
+        try { $cs = Get-CimInstance Win32_ComputerSystem -ErrorAction Stop } catch { }
+        try { $cpu = Get-CimInstance Win32_Processor -ErrorAction Stop | Select-Object -First 1 } catch { }
+        Add 'PC' $env:COMPUTERNAME
+        Add 'User' $env:USERNAME
+        if ($os) {
+            $build = $os.BuildNumber
+            try { $ubr = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Stop); if ($ubr.DisplayVersion) { $build = "$($ubr.DisplayVersion), build $($os.BuildNumber).$($ubr.UBR)" } } catch { }
+            Add 'Windows' (($os.Caption -replace '^Microsoft\s+', '') + " ($build)")
+            $up = (Get-Date) - $os.LastBootUpTime
+            Add 'Uptime' $(if ($up.TotalDays -ge 1) { '{0} d {1} h' -f [int][math]::Floor($up.TotalDays), $up.Hours } else { '{0} h {1} min' -f $up.Hours, $up.Minutes })
+        }
+        if ($cpu) { Add 'CPU' (($cpu.Name -replace '\s+', ' ').Trim() + " ($($cpu.NumberOfCores) cores)") }
+        if ($cs -and $os) { Add 'Memory' ('{0:0} GB ({1:0.#} GB free)' -f ($cs.TotalPhysicalMemory / 1GB), ($os.FreePhysicalMemory * 1KB / 1GB)) }
+        try {
+            $gpu = @(Get-CimInstance Win32_VideoController -ErrorAction Stop | Where-Object { $_.Name -notmatch 'Basic Display|Remote|Virtual|Parsec|Meta' } | ForEach-Object { $_.Name.Trim() })
+            if ($gpu) { Add 'GPU' ($gpu -join ', ') }
+        } catch { }
+        try {
+            $d = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='$($env:SystemDrive)'" -ErrorAction Stop
+            Add "Disk $($env:SystemDrive)" ('{0:0} GB free of {1:0} GB' -f ($d.FreeSpace / 1GB), ($d.Size / 1GB))
+        } catch { }
+        try {
+            $lan = @(Get-CimInstance Win32_NetworkAdapterConfiguration -Filter 'IPEnabled = TRUE' -ErrorAction Stop |
+                Where-Object { $_.DefaultIPGateway } | ForEach-Object { $_.IPAddress | Where-Object { $_ -match '^\d+\.\d+\.\d+\.\d+$' } })
+            if ($lan) { Add 'Local IP' ($lan -join ', ') }
+        } catch { }
+        $wan = ''
+        try { $wan = ([string](Invoke-RestMethod -Uri 'https://pxdtek.com/ip' -UserAgent 'pxdToolkit-cli' -TimeoutSec 5)).Trim() } catch { }
+        if ($wan -and $wan -ne 'unknown') { Add 'WAN IP' $wan }
+        $L
+    }
+
+    # The info on the left, the PD logo on the right (the logo is the same ASCII art as Show-PdHeader's; keep them in step).
+    function Show-SysHeader([string]$Version) {
+        $logo = @(
+            '      -++++++++++-'
+            '   :++-          -++:'
+            '  ++        +#-     ++'
+            ' #-         -+@%-    -#'
+            '++    =##*%#%=-=##.   ++'
+            '%    +%. .@:+%   *#    %'
+            '%    #*   %+:@. .%+    %'
+            '++   .##=-=%#%*##=    ++'
+            ' #-    -%@+-         -#'
+            '  ++     -#+        ++'
+            '   :++-          -++:'
+            '      -++++++++++-'
+        )
+        $text = New-Object System.Collections.Generic.List[object]
+        $text.Add(@('pxd Toolkit', 'White'))
+        $text.Add(@("$Version  -  pxdtek.com", 'DarkGray'))
+        $text.Add(@('', 'Gray'))
+        foreach ($l in (Get-SysLines)) { $text.Add($l) }
+        $leftWidth = [Math]::Max(40, ($text | ForEach-Object { $_[0].Length } | Measure-Object -Maximum).Maximum + 4)
+
+        $w = 0
+        try { $w = $Host.UI.RawUI.WindowSize.Width } catch { }
+        Write-Host ''
+        $showLogo = -not ($w -gt 0 -and $w -lt 2 + $leftWidth + 24)
+        $rows = [Math]::Max($text.Count, $(if ($showLogo) { $logo.Count } else { 0 }))
+        $top = if ($showLogo) { [Math]::Max(0, [Math]::Floor(($logo.Count - $text.Count) / 2)) } else { 0 }
+        $logoTop = if ($showLogo) { [Math]::Max(0, [Math]::Floor(($text.Count - $logo.Count) / 2)) } else { 0 }
+        for ($i = 0; $i -lt $rows; $i++) {
+            $j = $i - $top
+            $line = if ($j -ge 0 -and $j -lt $text.Count) { $text[$j] } else { @('', 'Gray') }
+            Write-Host ('  ' + $line[0].PadRight($leftWidth)) -NoNewline -ForegroundColor $line[1]
+            $k = $i - $logoTop
+            if ($showLogo -and $k -ge 0 -and $k -lt $logo.Count) {
+                # dense strokes white, the middle cyan, the edges dark cyan: one colour run at a time
+                $run = ''; $col = ''
+                foreach ($c in $logo[$k].ToCharArray()) {
+                    $kind = if ('@%#'.Contains([string]$c)) { 'White' } elseif ('*+='.Contains([string]$c)) { 'Cyan' } else { 'DarkCyan' }
+                    if ($kind -ne $col -and $run) { Write-Host $run -NoNewline -ForegroundColor $col; $run = '' }
+                    $col = $kind; $run += $c
+                }
+                if ($run) { Write-Host $run -NoNewline -ForegroundColor $col }
+            }
+            Write-Host ''
+        }
+        Write-Host ''
+        Say '  irm pxdtek.com/tk|iex' 'DarkCyan'
+    }
+
     # ---- the temporary list (default) --------------------------------------------------------------------------------
     # Reads only: the Toolkit's app list from GitHub, what's in the Apps folder, and each app's latest release.
     function Get-AppsRoot {
@@ -306,7 +397,7 @@ param([switch]$Install)
 
     $headers = @{ 'User-Agent' = 'pxdToolkit-cli'; 'Accept' = 'application/vnd.github+json' }
     $script:PdHeaderStyle = 0   # the ASCII logo
-    Show-PdHeader -Name 'pxd Toolkit' -Version $managerVersion -Command 'irm pxdtek.com/tk|iex'
+    Show-SysHeader $managerVersion
     while ($true) {
         $rows = @(Show-List)
         if (-not $rows -or -not $rows[0]) { break }
