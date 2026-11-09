@@ -139,7 +139,7 @@
     {
       "id": "PaxEventViewer",
       "name": "PAX Event Viewer",
-      "tagline": "What happened to this PC",
+      "tagline": "PC snapshot and event logs",
       "description": "Ticket-ready PC snapshot plus the event logs in plain English: blue screens, crashes, disk errors, failed updates, with what to try.",
       "repo": "joshpack/PaxEventViewer",
       "kind": "zip",
