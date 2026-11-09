@@ -3,7 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace PaxToolkit.Core;
+namespace pxdToolkit.Core;
 
 public sealed record ReleaseAsset(string Name, string Url, long Size);
 
@@ -28,7 +28,7 @@ public sealed class GitHub
     public GitHub(HttpClient http)
     {
         _http = http;
-        _api = Environment.GetEnvironmentVariable("PAXTK_GITHUB_API") is { Length: > 0 } api ? api.TrimEnd('/') : "https://api.github.com";
+        _api = Environment.GetEnvironmentVariable("PXDTK_GITHUB_API") is { Length: > 0 } api ? api.TrimEnd('/') : "https://api.github.com";
     }
 
     public static HttpClient CreateClient()
@@ -37,7 +37,7 @@ public sealed class GitHub
         {
             Timeout = TimeSpan.FromMinutes(30),
         };
-        http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("PaxToolkit", Versions.Current.ToString(3)));
+        http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("pxdToolkit", Versions.Current.ToString(3)));
         return http;
     }
 

@@ -3,11 +3,11 @@ using System.IO.Pipes;
 using Avalonia;
 using Avalonia.Headless;
 
-namespace PaxToolkit;
+namespace pxdToolkit;
 
 internal static class Program
 {
-    public const string PipeName = "PaxToolkit.commands";
+    public const string PipeName = "pxdToolkit.commands";
     private static Mutex? _instance;
 
     /// <summary>Started at sign-in (or with --minimized): stay in the tray.</summary>
@@ -46,9 +46,9 @@ internal static class Program
             }
         }
 
-        _instance = new Mutex(true, @"Local\PaxToolkit.instance", out var first);
+        _instance = new Mutex(true, @"Local\pxdToolkit.instance", out var first);
         if (!first)
-            return Forward(StartMinimized ? [] : ["--show"]) ? 0 : 1;
+            return StartMinimized ? 0 : Forward(["--show"]) ? 0 : 1;   // already running: a tray start changes nothing
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         return 0;

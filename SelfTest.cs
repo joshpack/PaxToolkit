@@ -3,14 +3,14 @@ using System.Text;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
-using PaxToolkit.Core;
-using PaxToolkit.Views;
+using pxdToolkit.Core;
+using pxdToolkit.Views;
 
-namespace PaxToolkit;
+namespace pxdToolkit;
 
 /// <summary>
-/// --self-test DIR: runs the real engine against GitHub with every path pointed at test folders (set PAXTK_DATA,
-/// PAXTK_APPS and PAXTK_STARTMENU first), installs and removes one small app, and renders the window off-screen to PNGs.
+/// --self-test DIR: runs the real engine against GitHub with every path pointed at test folders (set PXDTK_DATA,
+/// PXDTK_APPS and PXDTK_STARTMENU first), installs and removes one small app, and renders the window off-screen to PNGs.
 /// Nothing appears on screen. Extra modes: --icon OUT.ico, --render-icon DLL TYPE OUT.png.
 /// </summary>
 internal static class SelfTest
@@ -49,54 +49,79 @@ internal static class SelfTest
 
     private static async Task FullAsync()
     {
-        foreach (var v in new[] { "PAXTK_DATA", "PAXTK_APPS", "PAXTK_STARTMENU" })
+        foreach (var v in new[] { "PXDTK_DATA", "PXDTK_APPS", "PXDTK_STARTMENU" })
             if (Environment.GetEnvironmentVariable(v) is not { Length: > 0 })
                 throw new InvalidOperationException($"{v} must point at a test folder.");
 
-        // PAX App Standard link: the tray switch round-trips through toolkit.json without touching other apps' entries.
-        if (Environment.GetEnvironmentVariable("PAX_SHARED_DIR") is not { Length: > 0 })
-            throw new InvalidOperationException("PAX_SHARED_DIR must point at a test folder.");
-        Check("tray icon on by default", PaxStandard.PaxLink.TrayIconVisible("PaxAudioSwitcher"));
-        PaxStandard.PaxLink.SetTrayIconVisible("PaxAudioSwitcher", false);
-        PaxStandard.PaxLink.SetTrayIconVisible("PaxChatterGuard", true);
-        Check("tray icon switched off", !PaxStandard.PaxLink.TrayIconVisible("PaxAudioSwitcher"));
-        Check("other app untouched", PaxStandard.PaxLink.TrayIconVisible("PaxChatterGuard"));
+        // pxd App Standard link: the tray switch round-trips through toolkit.json without touching other apps' entries.
+        if (Environment.GetEnvironmentVariable("PXD_SHARED_DIR") is not { Length: > 0 })
+            throw new InvalidOperationException("PXD_SHARED_DIR must point at a test folder.");
+        Check("tray icon on by default", pxdStandard.pxdLink.TrayIconVisible("pxdAudioSwitcher"));
+        pxdStandard.pxdLink.SetTrayIconVisible("pxdAudioSwitcher", false);
+        pxdStandard.pxdLink.SetTrayIconVisible("pxdChatterGuard", true);
+        Check("tray icon switched off", !pxdStandard.pxdLink.TrayIconVisible("pxdAudioSwitcher"));
+        Check("other app untouched", pxdStandard.pxdLink.TrayIconVisible("pxdChatterGuard"));
         var fired = new TaskCompletionSource();
-        using (PaxStandard.PaxLink.Watch(() => fired.TrySetResult()))
+        using (pxdStandard.pxdLink.Watch(() => fired.TrySetResult()))
         {
-            PaxStandard.PaxLink.SetTrayIconVisible("PaxAudioSwitcher", true);
+            pxdStandard.pxdLink.SetTrayIconVisible("pxdAudioSwitcher", true);
             Check("watcher fires on change", await Task.WhenAny(fired.Task, Task.Delay(3000)) == fired.Task);
         }
 
-        Check("tray icon back on", PaxStandard.PaxLink.TrayIconVisible("PaxAudioSwitcher"));
+        Check("tray icon back on", pxdStandard.pxdLink.TrayIconVisible("pxdAudioSwitcher"));
 
         using var kit = new Toolkit();
         Line($"catalog: {kit.Apps.Count} apps ({string.Join(", ", kit.Apps.Select(a => a.App.Id))})");
         Check("built-in catalog parses", Catalog.Parse(Catalog.ReadBuiltIn())?.Count == kit.Apps.Count);
-        Check("Startup Scanner has its one-liner", kit.Find("PaxStartupScanner")?.App.InstallCommand == "irm paxdigi.com/startup | iex");
-        Check("Event Viewer has its one-liner", kit.Find("PaxEventViewer")?.App.InstallCommand == "irm paxdigi.com/eventviewer | iex");
+        Check("Startup Scanner has its one-liner", kit.Find("pxdStartupScanner")?.App.InstallCommand == "irm pxdtek.com/ss | iex");
+        Check("Event Viewer has its one-liner", kit.Find("pxdEventViewer")?.App.InstallCommand == "irm pxdtek.com/ev | iex");
         Check("version parse v0.001-beta", Versions.Parse("v0.001-beta") == new Version(0, 1, 0));
         Check("version parse 1.2.0+abc", Versions.Parse("1.2.0+abc") == new Version(1, 2, 0));
 
         // Icons come from the catalog's iconUrl, so apps added later get theirs in older toolkits too.
         Check("every catalog app has a GitHub icon URL", kit.Apps.All(a => Views.Icons.UsableUrl(a.App.IconUrl)));
         Check("non-GitHub icon URLs are refused", !Views.Icons.UsableUrl("https://example.com/x.png") && !Views.Icons.UsableUrl("http://raw.githubusercontent.com/x.png"));
-        var ev = kit.Find("PaxEventViewer")?.App;
+        var ev = kit.Find("pxdEventViewer")?.App;
         if (ev is not null)
         {
             var got = await Views.Icons.FetchAsync(ev);
-            var cached = Path.Combine(Paths.Data, "icons", "PaxEventViewer.png");
+            var cached = Path.Combine(Paths.Data, "icons", "pxdEventViewer.png");
             Check($"Event Viewer icon downloads and is cached ({(got is null ? "none" : $"{got.PixelSize.Width}x{got.PixelSize.Height}")})", got is not null && File.Exists(cached));
         }
-        var bad = new CatalogApp { Id = "IconTestMissing", Name = "Icon Test", IconUrl = "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/does-not-exist.png" };
+        var bad = new CatalogApp { Id = "IconTestMissing", Name = "Icon Test", IconUrl = "https://raw.githubusercontent.com/joshpack/pxdToolkit/main/Assets/icons/does-not-exist.png" };
         Check("a missing icon falls back (no picture, no crash)", await Views.Icons.FetchAsync(bad) is null && Views.Icons.For(bad) is not null);
+        // Former names: folders move once, Run command arguments survive, old installs are found.
+        var mig = Path.Combine(Dir!, "migrate");
+        var oldData = Path.Combine(mig, pxdStandard.pxdMigrate.FormerName("pxdWatermark"));
+        Directory.CreateDirectory(oldData);
+        File.WriteAllText(Path.Combine(oldData, "settings.json"), "{}");
+        Check("former name of pxdWatermark", pxdStandard.pxdMigrate.FormerName("pxdWatermark") == pxdStandard.pxdMigrate.FormerPrefix + "Watermark");
+        Check("old data folder moves", pxdStandard.pxdMigrate.Folder(oldData, Path.Combine(mig, "pxdWatermark")) && File.Exists(Path.Combine(mig, "pxdWatermark", "settings.json")) && !Directory.Exists(oldData));
+        Check("second move is a no-op", !pxdStandard.pxdMigrate.Folder(oldData, Path.Combine(mig, "pxdWatermark")));
+        Check("Run arguments kept", pxdStandard.pxdMigrate.ArgsOf("\"C:\\A B\\x.exe\" --minimized") == "--minimized" && pxdStandard.pxdMigrate.ArgsOf("C:\\x.exe") == "");
+        var oldInstall = Path.Combine(kit.Settings.EffectiveAppsRoot, pxdStandard.pxdMigrate.FormerName("pxdDiagnostics"));
+        Directory.CreateDirectory(oldInstall);
+        File.WriteAllText(Path.Combine(oldInstall, pxdStandard.pxdMigrate.FormerName("pxdDiagnostics.exe")), "");
+        Check("old install found", Migration.FormerInstall(kit, kit.Find("pxdDiagnostics")!) is { } found && found.Dir == oldInstall);
+
         await kit.CheckAsync();
         Line("check error: " + (kit.LastCheckError ?? "none"));
         foreach (var e in kit.Apps)
             Line($"  {e.App.Id,-18} latest={e.Latest?.Tag ?? (e.NoRelease ? "(no release)" : "?"),-12} asset={e.Download?.Name ?? "-"} {e.CheckError}");
 
+        var diag = kit.Find("pxdDiagnostics")!;
+        var movedApps = await Migration.AppsAsync(kit);
+        if (diag.Latest?.Find(diag.App.Asset) is null)
+            Check("old install kept while there's no pxd release", Directory.Exists(oldInstall) && !diag.IsInstalled);
+        else
+            Check($"old install moved to the pxd folder ({movedApps})", !Directory.Exists(oldInstall) && diag.IsInstalled && diag.InstallDir!.EndsWith("pxdDiagnostics", StringComparison.OrdinalIgnoreCase));
+        if (diag.IsInstalled)
+            await kit.UninstallAsync(diag);
+        if (Directory.Exists(oldInstall))
+            Directory.Delete(oldInstall, true);
+
         // Install the smallest real app, check it landed, start-menu shortcut and all, then remove it again.
-        var target = kit.Find(Arg("--app") ?? "PaxAutoClicker")!;
+        var target = kit.Find(Arg("--app") ?? "pxdAutoClicker")!;
         Check($"{target.App.Id} not installed before", !target.IsInstalled);
         await kit.InstallAsync(target);
         Line($"installed: dir={target.InstallDir} exe={target.ExePath} version={Versions.Show(target.InstalledVersion)} runtimes missing={target.MissingRuntimes.Count}");
@@ -121,7 +146,7 @@ internal static class SelfTest
         kit.Detect(target);
 
         // A script app installs as a single file.
-        if (kit.Find("PaxStartupScanner") is { Download: not null } script)
+        if (kit.Find("pxdStartupScanner") is { Download: not null } script)
         {
             await kit.InstallAsync(script);
             Check("script installed", script.ExePath is { } p && File.Exists(p) && p.EndsWith(".ps1"));
@@ -135,7 +160,7 @@ internal static class SelfTest
         Check("removed", !target.IsInstalled && !Directory.Exists(Path.Combine(Paths.DefaultAppsRoot, target.App.Folder)));
         Check("shortcut removed", !File.Exists(Path.Combine(Paths.StartMenu, target.App.Name + ".lnk")));
         Check("record removed", !Settings.Load().Installed.ContainsKey(target.App.Id));
-        if (kit.Find("PaxStartupScanner") is { IsInstalled: true } s2)
+        if (kit.Find("pxdStartupScanner") is { IsInstalled: true } s2)
             await kit.UninstallAsync(s2);
 
         RenderWindow(kit, "window-after");
@@ -166,10 +191,10 @@ internal static class SelfTest
             e.IsRunning = false;
         }
 
-        Fake("PaxCommander", null, running: true);
-        Fake("PaxAudioSwitcher", "1.1.0", running: true);
-        Fake("PaxChatterGuard", null, running: true);
-        Fake("PaxStartupScanner", null);
+        Fake("pxdCommander", null, running: true);
+        Fake("pxdAudioSwitcher", "1.1.0", running: true);
+        Fake("pxdChatterGuard", null, running: true);
+        Fake("pxdStartupScanner", null);
         RenderWindow(kit, "screenshot");
     }
 
@@ -224,7 +249,7 @@ internal static class SelfTest
         window.Close();
     }
 
-    /// <summary>Calls another PAX app's static AppIcon.Create(int) from its dll and saves the picture.</summary>
+    /// <summary>Calls another pxd app's static AppIcon.Create(int) from its dll and saves the picture.</summary>
     private static void RenderForeignIcon(string dll, string type, string output)
     {
         var asm = Assembly.LoadFrom(dll);

@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace PaxToolkit.Core;
+namespace pxdToolkit.Core;
 
 /// <summary>What the toolkit remembers about one installed app.</summary>
 public sealed class InstallRecord

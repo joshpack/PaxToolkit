@@ -3,9 +3,9 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
-using PaxToolkit.Core;
+using pxdToolkit.Core;
 
-namespace PaxToolkit.Views;
+namespace pxdToolkit.Views;
 
 /// <summary>
 /// App pictures. The catalog's <c>iconUrl</c> wins (downloaded once, cached in the data folder, refreshed weekly), so an
@@ -54,7 +54,7 @@ public static class Icons
     {
         try
         {
-            var uri = new Uri($"avares://PaxToolkit/Assets/icons/{app.Id}.png");
+            var uri = new Uri($"avares://pxdToolkit/Assets/icons/{app.Id}.png");
             return AssetLoader.Exists(uri) ? new Bitmap(AssetLoader.Open(uri)) : null;
         }
         catch

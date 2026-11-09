@@ -5,7 +5,7 @@ using ShapePath = Avalonia.Controls.Shapes.Path;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 
-namespace PaxToolkit;
+namespace pxdToolkit;
 
 /// <summary>
 /// The toolkit's mark: three app tiles and a "+" slot on a cyan-to-green tile. Drawn from shapes so it is crisp at any
@@ -43,7 +43,7 @@ public static class AppIcon
     /// <summary>A rounded tile with the app's initials, for apps that have no picture.</summary>
     public static Bitmap Monogram(string name, string color, int size = 96)
     {
-        var words = name.Replace("PAX ", "", StringComparison.OrdinalIgnoreCase).Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var words = name.Replace("pxd ", "", StringComparison.OrdinalIgnoreCase).Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var letters = string.Concat(words.Take(2).Select(w => char.ToUpperInvariant(w[0])));
         Color c;
         try

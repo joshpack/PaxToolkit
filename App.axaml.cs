@@ -4,10 +4,10 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using PaxToolkit.Core;
-using PaxToolkit.Views;
+using pxdToolkit.Core;
+using pxdToolkit.Views;
 
-namespace PaxToolkit;
+namespace pxdToolkit;
 
 public partial class App : Application
 {
@@ -33,8 +33,8 @@ public partial class App : Application
         {
             _lifetime = lifetime;
             lifetime.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-            PaxStandard.PaxChrome.Configure("PaxToolkit", Paths.Data);
-            Styles.Add(PaxStandard.PaxChrome.Styles());
+            pxdStandard.pxdChrome.Configure("pxdToolkit", Paths.Data);
+            Styles.Add(pxdStandard.pxdChrome.Styles());
 
             if (SelfTest.Dir is not null)
             {
@@ -48,18 +48,19 @@ public partial class App : Application
             }
 
             SelfUpdate.CleanUp();
+            Migration.Own();
             _kit = new Toolkit();
             _kit.Changed += _ => Dispatcher.UIThread.Post(QueueTrayUpdate);
 
             _icon = AppIcon.Window();
             _badgeIcon = AppIcon.Window(badge: true);
-            _tray = new TrayIcon { Icon = _icon, ToolTipText = "PAX Toolkit", IsVisible = PaxStandard.PaxLink.TrayIconVisible("PaxToolkit") };
+            _tray = new TrayIcon { Icon = _icon, ToolTipText = "pxd Toolkit", IsVisible = pxdStandard.pxdLink.TrayIconVisible("pxdToolkit") };
             _tray.Clicked += (_, _) => OpenWindow();
             TrayIcon.SetIcons(this, new TrayIcons { _tray });
             UpdateTray();
-            // PAX App Standard: the tray icon follows the shared switch (Settings here, or toolkit.json).
-            _linkWatch = PaxStandard.PaxLink.Watch(() => Dispatcher.UIThread.Post(() =>
-                _tray.IsVisible = PaxStandard.PaxLink.TrayIconVisible("PaxToolkit")));
+            // pxd App Standard: the tray icon follows the shared switch (Settings here, or toolkit.json).
+            _linkWatch = pxdStandard.pxdLink.Watch(() => Dispatcher.UIThread.Post(() =>
+                _tray.IsVisible = pxdStandard.pxdLink.TrayIconVisible("pxdToolkit")));
 
             _ = Task.Run(ListenForCommands);
 
@@ -68,7 +69,8 @@ public partial class App : Application
             else
                 DispatcherTimer.RunOnce(MemoryTrim.Trim, TimeSpan.FromSeconds(5));
 
-            // First check soon after start (or right away if the last one is old), then every few hours.
+            // The app list now; the release check soon after start (or right away if the last one is old), then every few hours.
+            _ = _kit.RefreshCatalogAsync(_quit.Token);
             var due = _kit.Settings.LastCheckUtc is { } last ? last + CheckEvery - DateTime.UtcNow : TimeSpan.Zero;
             DispatcherTimer.RunOnce(() => _ = CheckAsync(auto: true), due < TimeSpan.FromSeconds(3) ? TimeSpan.FromSeconds(3) : due > CheckEvery ? CheckEvery : due);
             var timer = new DispatcherTimer { Interval = CheckEvery };
@@ -100,6 +102,16 @@ public partial class App : Application
         catch
         {
             return;
+        }
+
+        // Apps still installed under their former names move to the pxd ones (no-op once done).
+        try
+        {
+            await Migration.AppsAsync(_kit, _quit.Token);
+        }
+        catch
+        {
+            /* tried again at the next check */
         }
 
         if (auto && _kit.Settings.AutoUpdate)
@@ -140,7 +152,7 @@ public partial class App : Application
     private void UpdateTray()
     {
         var menu = new NativeMenu();
-        var open = new NativeMenuItem("Open PAX Toolkit");
+        var open = new NativeMenuItem("Open pxd Toolkit");
         open.Click += (_, _) => OpenWindow();
         menu.Add(open);
         menu.Add(new NativeMenuItemSeparator());
@@ -220,8 +232,8 @@ public partial class App : Application
 
         var badge = updates > 0 || _kit.ToolkitUpdate is not null;
         _tray.ToolTipText = badge
-            ? $"PAX Toolkit: {(updates > 0 ? $"{updates} update{(updates == 1 ? "" : "s")} ready" : "a new toolkit version is ready")}"
-            : $"PAX Toolkit: {installed.Count} app{(installed.Count == 1 ? "" : "s")} on";
+            ? $"pxd Toolkit: {(updates > 0 ? $"{updates} update{(updates == 1 ? "" : "s")} ready" : "a new toolkit version is ready")}"
+            : $"pxd Toolkit: {installed.Count} app{(installed.Count == 1 ? "" : "s")} on";
         if (badge != _shownBadge)
         {
             _shownBadge = badge;

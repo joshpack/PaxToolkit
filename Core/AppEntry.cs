@@ -1,4 +1,4 @@
-namespace PaxToolkit.Core;
+namespace pxdToolkit.Core;
 
 /// <summary>Live state of one catalog app on this PC: installed or not, which version, running, busy.</summary>
 public sealed class AppEntry(CatalogApp app)

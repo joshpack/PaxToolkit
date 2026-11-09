@@ -3,7 +3,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
-namespace PaxToolkit.Core;
+namespace pxdToolkit.Core;
 
 /// <summary>
 /// The engine: knows every catalog app, finds what's installed, checks GitHub for new releases, and installs, updates,
@@ -108,7 +108,7 @@ public sealed class Toolkit : IDisposable
         e.InstallDir = dir;
         e.ExePath = exe;
         e.External = external;
-        // Apps that update themselves (PAX Commander) leave our recorded tag behind: trust the exe when it's newer.
+        // Apps that update themselves (pxd Commander) leave our recorded tag behind: trust the exe when it's newer.
         if (exe is not null && version is not null && app.SelfUpdates && FileVersion(exe, app.IsScript) is { } own && own > version)
             version = own;
         e.InstalledVersion = exe is null ? null : version ?? FileVersion(exe, app.IsScript);
@@ -206,6 +206,29 @@ public sealed class Toolkit : IDisposable
 
     // ───────────────────────────── update checks ─────────────────────────────
 
+    /// <summary>
+    /// Just the app list from GitHub (one raw file, no API limit), at every start, so catalog changes (new apps, new
+    /// one-liners) show up straight away instead of at the next release check.
+    /// </summary>
+    public async Task RefreshCatalogAsync(CancellationToken ct = default)
+    {
+        if (!await _checkLock.WaitAsync(0, ct))
+            return; // a full check is running and fetches it anyway
+        try
+        {
+            if (await Catalog.FetchRemoteAsync(_http, ct) is { } remote)
+                SetCatalog(remote);
+        }
+        catch
+        {
+            /* offline: the local list stays */
+        }
+        finally
+        {
+            _checkLock.Release();
+        }
+    }
+
     /// <summary>Fetches the app list and every app's latest release. Safe to call often; overlapping calls wait.</summary>
     public async Task CheckAsync(CancellationToken ct = default)
     {
@@ -237,7 +260,7 @@ public sealed class Toolkit : IDisposable
 
             try
             {
-                var self = await _github.LatestAsync("joshpack/PaxToolkit", ct);
+                var self = await _github.LatestAsync("joshpack/pxdToolkit", ct);
                 ToolkitUpdate = self?.Version is { } v && v > Versions.Current && self.Find(SelfUpdate.AssetPattern) is not null ? self : null;
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

@@ -1,13 +1,13 @@
 using System.Diagnostics;
 using System.IO.Compression;
 
-namespace PaxToolkit.Core;
+namespace pxdToolkit.Core;
 
 /// <summary>The toolkit moving itself into its own folder, and replacing itself with a newer release.</summary>
 public static class SelfUpdate
 {
-    public const string AssetPattern = @"^PaxToolkit-.*-win-x64\.zip$";
-    private const string ExeName = "PaxToolkit.exe";
+    public const string AssetPattern = @"^pxdToolkit-.*-win-x64\.zip$";
+    private const string ExeName = "pxdToolkit.exe";
 
     public static string? CurrentExe => Environment.ProcessPath;
 
@@ -36,7 +36,7 @@ public static class SelfUpdate
         }
     }
 
-    /// <summary>Copies this exe to %USERPROFILE%\Apps\PaxToolkit, adds Start menu shortcuts and starts that copy.</summary>
+    /// <summary>Copies this exe to %USERPROFILE%\Apps\pxdToolkit, adds Start menu shortcuts and starts that copy.</summary>
     public static void InstallHere()
     {
         Directory.CreateDirectory(Paths.ToolkitHome);
@@ -49,7 +49,7 @@ public static class SelfUpdate
     {
         try
         {
-            Shortcut.Create(Path.Combine(Paths.StartMenu, "PAX Toolkit.lnk"), HomeExe, null, Paths.ToolkitHome, "Install, update and open your PAX apps");
+            Shortcut.Create(Path.Combine(Paths.StartMenu, "pxd Toolkit.lnk"), HomeExe, null, Paths.ToolkitHome, "Install, update and open your pxd apps");
         }
         catch
         {
@@ -61,7 +61,7 @@ public static class SelfUpdate
     public static async Task ApplyAsync(HttpClient http, Release release, Action<double> progress, CancellationToken ct = default)
     {
         var asset = release.Find(AssetPattern) ?? throw new InvalidOperationException("That release has no Windows download.");
-        var exe = CurrentExe ?? throw new InvalidOperationException("Can't tell where PAX Toolkit is running from.");
+        var exe = CurrentExe ?? throw new InvalidOperationException("Can't tell where pxd Toolkit is running from.");
         var stage = Path.Combine(Paths.Downloads, "toolkit-update");
         if (Directory.Exists(stage))
             Directory.Delete(stage, true);
@@ -88,7 +88,7 @@ public static class SelfUpdate
 
         ZipFile.ExtractToDirectory(zip, stage);
         var fresh = Directory.EnumerateFiles(stage, ExeName, SearchOption.AllDirectories).FirstOrDefault()
-                    ?? throw new InvalidOperationException("The download has no PaxToolkit.exe in it.");
+                    ?? throw new InvalidOperationException("The download has no pxdToolkit.exe in it.");
 
         if (File.Exists(exe + ".old"))
             File.Delete(exe + ".old");

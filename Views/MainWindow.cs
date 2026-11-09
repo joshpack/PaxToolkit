@@ -6,10 +6,10 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
-using PaxStandard;
-using PaxToolkit.Core;
+using pxdStandard;
+using pxdToolkit.Core;
 
-namespace PaxToolkit.Views;
+namespace pxdToolkit.Views;
 
 /// <summary>
 /// The toolkit window: a slim sidebar listing the apps (installed first, then available) and a detail pane for the
@@ -48,7 +48,7 @@ public sealed class MainWindow : Window
     {
         _kit = kit;
         _app = app;
-        Title = "PAX Toolkit";
+        Title = "pxd Toolkit";
         Icon = AppIcon.Window();
         Width = 980;
         Height = 660;
@@ -67,11 +67,11 @@ public sealed class MainWindow : Window
         body.Children.Add(sideEdge);
         body.Children.Add(new ScrollViewer { Content = _detailHost });
 
-        Content = PaxChrome.Wrap(this, body, "PAX Toolkit", AppIcon.Render(36));
-        PaxChrome.RememberPlacement(this, "main");
+        Content = pxdChrome.Wrap(this, body, "pxd Toolkit", AppIcon.Render(36));
+        pxdChrome.RememberPlacement(this, "main");
 
         _kit.Changed += OnChanged;
-        _linkWatch = PaxLink.Watch(() => OnChanged(null));
+        _linkWatch = pxdLink.Watch(() => OnChanged(null));
         Closed += (_, _) =>
         {
             _kit.Changed -= OnChanged;
@@ -105,12 +105,13 @@ public sealed class MainWindow : Window
         Refresh(force: true);
     }
 
-    /// <summary>PAX Toolkit's own one-liner first, then every catalog app that has one, in catalog order.</summary>
+    /// <summary>pxd Toolkit's own one-liner first, then every catalog app that has one, in catalog order.</summary>
     private List<(CatalogApp? App, string Name, string Command, string Note)> Commands()
     {
         var list = new List<(CatalogApp?, string, string, string)>
         {
-            (null, "PAX Toolkit", ToolkitInstallCommand, "Installs or updates PAX Toolkit on any PC, no admin needed."),
+            (null, "pxd Toolkit in PowerShell", ToolkitConsoleCommand, "Lists the pxd apps that have a PowerShell edition and whether they're installed, and runs them in memory. Installs nothing and saves nothing on the PC."),
+            (null, "Install pxd Toolkit", ToolkitInstallCommand, "Installs or updates this app on any PC, no admin needed. It starts in the tray; its window opens only if you say so."),
         };
         foreach (var e in _kit.Apps)
             if (e.App.InstallCommand is { Length: > 0 } cmd)
@@ -177,7 +178,7 @@ public sealed class MainWindow : Window
         $"{e.App.Id}:{e.IsInstalled}:{e.Busy}:{e.BusyText}:{e.IsRunning}:{e.UpdateAvailable}:{e.Latest?.Tag}:{e.NoRelease}:{e.Error}";
 
     private string DetailKey(AppEntry e) =>
-        RowKey(e) + $":{e.InstalledVersion}:{e.InstallDir}:{e.MissingRuntimes.Count}:{(e.App.Tray ? PaxLink.TrayIconVisible(e.App.Id) : false)}:{_confirmRemove}:{e.CheckError}";
+        RowKey(e) + $":{e.InstalledVersion}:{e.InstallDir}:{e.MissingRuntimes.Count}:{(e.App.Tray ? pxdLink.TrayIconVisible(e.App.Id) : false)}:{_confirmRemove}:{e.CheckError}";
 
     private void BuildList()
     {
@@ -285,7 +286,7 @@ public sealed class MainWindow : Window
         line.Children.Add(settings);
         if (_kit.ToolkitUpdate is { } tu)
         {
-            var upd = new Button { Content = $"PAX Toolkit v{Versions.Show(tu.Version)} is out", Classes = { "small" }, HorizontalAlignment = HorizontalAlignment.Stretch };
+            var upd = new Button { Content = $"pxd Toolkit v{Versions.Show(tu.Version)} is out", Classes = { "small" }, HorizontalAlignment = HorizontalAlignment.Stretch };
             upd.Click += (_, _) => ShowSettings();
             _sidebarFoot.Children.Add(upd);
         }
@@ -373,12 +374,12 @@ public sealed class MainWindow : Window
             root.Children.Add(card);
         }
 
-        // Tray icon switch (apps that have one), straight from the PAX Toolkit link.
+        // Tray icon switch (apps that have one), straight from the pxd Toolkit link.
         if (app.Tray && e.IsInstalled)
         {
-            var on = PaxLink.TrayIconVisible(app.Id);
+            var on = pxdLink.TrayIconVisible(app.Id);
             var toggle = new ToggleSwitch { IsChecked = on, OnContent = "", OffContent = "", VerticalAlignment = VerticalAlignment.Center };
-            toggle.IsCheckedChanged += (_, _) => PaxLink.SetTrayIconVisible(app.Id, toggle.IsChecked == true);
+            toggle.IsCheckedChanged += (_, _) => pxdLink.SetTrayIconVisible(app.Id, toggle.IsChecked == true);
             var texts = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 24, 0) };
             texts.Children.Add(new TextBlock { Text = "Tray icon", FontWeight = FontWeight.SemiBold, Foreground = Text });
             texts.Children.Add(new TextBlock
@@ -538,7 +539,7 @@ public sealed class MainWindow : Window
                     btn.Content = Toolkit.Friendly(ex);
                 }
             };
-            panel.Children.Add(Banner($"A new PAX Toolkit is out (v{Versions.Show(upd.Version)}).", btn, Info));
+            panel.Children.Add(Banner($"A new pxd Toolkit is out (v{Versions.Show(upd.Version)}).", btn, Info));
         }
 
         if (!SelfUpdate.RunningFromHome && !SelfUpdate.IsDevBuild && !HideSetupBanner)
@@ -555,10 +556,10 @@ public sealed class MainWindow : Window
                     btn.Content = Toolkit.Friendly(ex);
                 }
             };
-            panel.Children.Add(Banner($"PAX Toolkit is running from {Path.GetDirectoryName(SelfUpdate.CurrentExe)}. Keep it in {Paths.ToolkitHome} with a Start menu shortcut?", btn, Info));
+            panel.Children.Add(Banner($"pxd Toolkit is running from {Path.GetDirectoryName(SelfUpdate.CurrentExe)}. Keep it in {Paths.ToolkitHome} with a Start menu shortcut?", btn, Info));
         }
 
-        var startup = new CheckBox { Content = "Start PAX Toolkit with Windows (in the tray)", IsChecked = Autostart.IsEnabled() };
+        var startup = new CheckBox { Content = "Start pxd Toolkit with Windows (in the tray)", IsChecked = Autostart.IsEnabled() };
         startup.IsCheckedChanged += (_, _) =>
         {
             try
@@ -570,12 +571,12 @@ public sealed class MainWindow : Window
                 startup.IsChecked = Autostart.IsEnabled();
             }
         };
-        var tray = new CheckBox { Content = "Show PAX Toolkit in the tray", IsChecked = PaxLink.TrayIconVisible("PaxToolkit") };
-        tray.IsCheckedChanged += (_, _) => PaxLink.SetTrayIconVisible("PaxToolkit", tray.IsChecked == true);
+        var tray = new CheckBox { Content = "Show pxd Toolkit in the tray", IsChecked = pxdLink.TrayIconVisible("pxdToolkit") };
+        tray.IsCheckedChanged += (_, _) => pxdLink.SetTrayIconVisible("pxdToolkit", tray.IsChecked == true);
 
         var check = new CheckBox { Content = "Check GitHub for updates every 6 hours", IsChecked = s.CheckForUpdates };
         var auto = new CheckBox { Content = "Install app updates automatically (running apps are restarted)", IsChecked = s.AutoUpdate };
-        var shortcuts = new CheckBox { Content = "Add Start menu shortcuts (Start → PAX Toolkit) for apps I install", IsChecked = s.StartMenuShortcuts };
+        var shortcuts = new CheckBox { Content = "Add Start menu shortcuts (Start → pxd Toolkit) for apps I install", IsChecked = s.StartMenuShortcuts };
         check.IsCheckedChanged += (_, _) => { s.CheckForUpdates = check.IsChecked == true; s.Save(); };
         auto.IsCheckedChanged += (_, _) => { s.AutoUpdate = auto.IsChecked == true; s.Save(); };
         shortcuts.IsCheckedChanged += (_, _) => { s.StartMenuShortcuts = shortcuts.IsChecked == true; s.Save(); };
@@ -584,7 +585,7 @@ public sealed class MainWindow : Window
         var browse = Btn("Browse…", () => { });
         browse.Click += async (_, _) =>
         {
-            var picked = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Where should PAX apps go?", AllowMultiple = false });
+            var picked = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Where should pxd apps go?", AllowMultiple = false });
             if (picked.FirstOrDefault()?.TryGetLocalPath() is { } path)
                 folder.Text = path;
         };
@@ -594,18 +595,18 @@ public sealed class MainWindow : Window
         folderRow.Children.Add(folder);
         folderRow.Children.Add(browse);
 
-        panel.Children.Add(Section("PAX TOOLKIT", startup, tray,
-            new TextBlock { Text = "With the tray icon off, PAX Toolkit keeps running and opens when you start it again.", Foreground = Muted, FontSize = 12, TextWrapping = TextWrapping.Wrap }));
+        panel.Children.Add(Section("pxd TOOLKIT", startup, tray,
+            new TextBlock { Text = "With the tray icon off, pxd Toolkit keeps running and opens when you start it again.", Foreground = Muted, FontSize = 12, TextWrapping = TextWrapping.Wrap }));
         panel.Children.Add(CommandCard("INSTALL WITH POWERSHELL", ToolkitInstallCommand,
-            "Installs or updates PAX Toolkit on any PC, no admin needed. Paste it into PowerShell."));
+            "Installs or updates pxd Toolkit on any PC, no admin needed. Paste it into PowerShell. (irm pxdtek.com/tk | iex on its own only lists and runs the PowerShell tools, without installing anything.)"));
         panel.Children.Add(Section("UPDATES", check, auto));
         panel.Children.Add(Section("INSTALLING", shortcuts,
             new TextBlock { Text = "Install folder", Margin = new Thickness(0, 6, 0, 0) },
             folderRow,
             new TextBlock { Text = "New apps go into their own folder in here. Apps that are already installed stay where they are.", Foreground = Muted, FontSize = 12, TextWrapping = TextWrapping.Wrap }));
         panel.Children.Add(Section("ABOUT",
-            new TextBlock { Text = $"PAX Toolkit v{Versions.Show(Versions.Current)} · settings in {Paths.Data}", Foreground = Muted, TextWrapping = TextWrapping.Wrap },
-            Link("PAX Toolkit on GitHub", () => Toolkit.OpenUrl("https://github.com/joshpack/PaxToolkit"))));
+            new TextBlock { Text = $"pxd Toolkit v{Versions.Show(Versions.Current)} · settings in {Paths.Data}", Foreground = Muted, TextWrapping = TextWrapping.Wrap },
+            Link("pxd Toolkit on GitHub", () => Toolkit.OpenUrl("https://github.com/joshpack/pxdToolkit"))));
         return panel;
     }
 
@@ -622,8 +623,11 @@ public sealed class MainWindow : Window
 
     // ───────────────────────────── helpers ─────────────────────────────
 
-    /// <summary>The toolkit's own one-line installer (install.ps1, via the paxdigi.com short link).</summary>
-    public const string ToolkitInstallCommand = "irm paxdigi.com/toolkit | iex";
+    /// <summary>install.ps1 through the pxdtek.com short link: on its own, the temporary in-memory console.</summary>
+    public const string ToolkitConsoleCommand = "irm pxdtek.com/tk | iex";
+
+    /// <summary>The same script with -Install: installs (or updates) the pxd Toolkit app.</summary>
+    public const string ToolkitInstallCommand = "& ([scriptblock]::Create((irm pxdtek.com/tk))) -Install";
 
     // ───────────────────────────── PowerShell one-liners ─────────────────────────────
 

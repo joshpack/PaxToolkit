@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace PaxToolkit.Core;
+namespace pxdToolkit.Core;
 
 /// <summary>One app the toolkit can turn on: where its releases live and how to run it.</summary>
 public sealed class CatalogApp
@@ -36,7 +36,7 @@ public sealed class CatalogApp
     /// <summary>Script apps: extra arguments for the GUI mode. Null = no GUI.</summary>
     public string? GuiArgs { get; set; }
 
-    /// <summary>The app has a tray icon the toolkit can turn on and off (PAX App Standard link).</summary>
+    /// <summary>The app has a tray icon the toolkit can turn on and off (pxd App Standard link).</summary>
     public bool Tray { get; set; }
 
     /// <summary>A PowerShell one-liner that installs or runs the app without the toolkit (shown with a Copy button). Null = none.</summary>
@@ -49,7 +49,7 @@ public sealed class CatalogApp
     public bool Elevate { get; set; }
 
     /// <summary>
-    /// The app can update itself in place (PAX Commander), so the toolkit's recorded tag can fall behind: the exe's
+    /// The app can update itself in place (pxd Commander), so the toolkit's recorded tag can fall behind: the exe's
     /// own version wins when it's newer.
     /// </summary>
     public bool SelfUpdates { get; set; }
@@ -82,12 +82,12 @@ public sealed class CatalogFile
 }
 
 /// <summary>
-/// The app list ships inside the toolkit, and a newer copy is fetched from the PaxToolkit repo, so new apps show up
+/// The app list ships inside the toolkit, and a newer copy is fetched from the pxdToolkit repo, so new apps show up
 /// without a toolkit update.
 /// </summary>
 public static class Catalog
 {
-    public const string RemoteUrl = "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/catalog.json";
+    public const string RemoteUrl = "https://raw.githubusercontent.com/joshpack/pxdToolkit/main/catalog.json";
 
     public static readonly JsonSerializerOptions Json = new()
     {
@@ -100,12 +100,29 @@ public static class Catalog
 
     private static string CachePath => Path.Combine(Paths.Data, "catalog-cache.json");
 
-    /// <summary>The cached remote list if there is a good one, otherwise the built-in one.</summary>
+    /// <summary>
+    /// The cached remote list if there is a good one fetched after this toolkit was built, otherwise the built-in one
+    /// (a cache from before an update is older than the list the update carries).
+    /// </summary>
     public static List<CatalogApp> LoadLocal()
     {
-        if (Parse(TryRead(CachePath)) is { } cached)
+        if (CacheIsFresh() && Parse(TryRead(CachePath)) is { } cached)
             return cached;
         return Parse(ReadBuiltIn()) ?? [];
+    }
+
+    private static bool CacheIsFresh()
+    {
+        try
+        {
+            var exe = Environment.ProcessPath;
+            return File.Exists(CachePath)
+                   && (exe is null || !File.Exists(exe) || File.GetLastWriteTimeUtc(CachePath) > File.GetLastWriteTimeUtc(exe));
+        }
+        catch
+        {
+            return true;
+        }
     }
 
     public static string ReadBuiltIn()
@@ -118,7 +135,7 @@ public static class Catalog
     /// <summary>Fetches the list from GitHub and caches it; null when offline or the file is bad.</summary>
     public static async Task<List<CatalogApp>?> FetchRemoteAsync(HttpClient http, CancellationToken ct = default)
     {
-        if (Environment.GetEnvironmentVariable("PAXTK_NO_REMOTE_CATALOG") is not null)
+        if (Environment.GetEnvironmentVariable("PXDTK_NO_REMOTE_CATALOG") is not null)
             return null;
         try
         {

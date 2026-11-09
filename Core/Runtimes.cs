@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 
-namespace PaxToolkit.Core;
+namespace pxdToolkit.Core;
 
 /// <summary>Checks whether the .NET runtimes an app was built against are on this PC.</summary>
 public static class Runtimes

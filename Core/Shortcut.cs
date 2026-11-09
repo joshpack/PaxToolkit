@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
-namespace PaxToolkit.Core;
+namespace pxdToolkit.Core;
 
 /// <summary>Writes .lnk files through the shell's IShellLink, with no scripting host involved.</summary>
 public static class Shortcut
