@@ -146,6 +146,8 @@
       "asset": "^PaxEventViewer-.*-win-x64\\.zip$",
       "exe": "PaxEventViewer.exe",
       "folder": "PaxEventViewer",
+      "installCommand": "irm paxdigi.com/eventviewer | iex",
+      "commandNote": "Runs the console edition on any PC with nothing to install: the same snapshot and problem digest, and it never changes anything.",
       "color": "#FF7A45",
       "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxEventViewer.png"
     }

@@ -74,6 +74,7 @@ internal static class SelfTest
         Line($"catalog: {kit.Apps.Count} apps ({string.Join(", ", kit.Apps.Select(a => a.App.Id))})");
         Check("built-in catalog parses", Catalog.Parse(Catalog.ReadBuiltIn())?.Count == kit.Apps.Count);
         Check("Startup Scanner has its one-liner", kit.Find("PaxStartupScanner")?.App.InstallCommand == "irm paxdigi.com/startup | iex");
+        Check("Event Viewer has its one-liner", kit.Find("PaxEventViewer")?.App.InstallCommand == "irm paxdigi.com/eventviewer | iex");
         Check("version parse v0.001-beta", Versions.Parse("v0.001-beta") == new Version(0, 1, 0));
         Check("version parse 1.2.0+abc", Versions.Parse("1.2.0+abc") == new Version(1, 2, 0));
 
@@ -214,6 +215,9 @@ internal static class SelfTest
             window.Select(withCommand.App.Id);
             Shot(name + "-command");
         }
+
+        window.ShowCommands();
+        Shot(name + "-oneliners");
 
         window.ShowSettings();
         Shot(name + "-settings");

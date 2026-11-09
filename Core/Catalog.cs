@@ -42,6 +42,9 @@ public sealed class CatalogApp
     /// <summary>A PowerShell one-liner that installs or runs the app without the toolkit (shown with a Copy button). Null = none.</summary>
     public string? InstallCommand { get; set; }
 
+    /// <summary>One line under the command saying what it does. Null = a default for installers / scripts.</summary>
+    public string? CommandNote { get; set; }
+
     /// <summary>Ask for admin rights when starting it.</summary>
     public bool Elevate { get; set; }
 
@@ -62,6 +65,11 @@ public sealed class CatalogApp
 
     /// <summary>Picture to show; a URL, or empty to use the built-in icon (or a generated one).</summary>
     public string? IconUrl { get; set; }
+
+    /// <summary>What the one-liner does, for the card under it.</summary>
+    [JsonIgnore] public string CommandText => CommandNote is { Length: > 0 } n ? n
+        : IsScript ? $"Runs the latest {Name} straight from GitHub, no install needed. Paste it into PowerShell on any PC."
+        : $"Installs the latest {Name} on any PC. Paste it into PowerShell.";
 
     [JsonIgnore] public bool IsScript => Kind.Equals("script", StringComparison.OrdinalIgnoreCase);
     [JsonIgnore] public string RepoUrl => $"https://github.com/{Repo}";

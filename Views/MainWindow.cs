@@ -35,6 +35,7 @@ public sealed class MainWindow : Window
     private TextBlock? _detailBusy;
     private string? _selected;
     private bool _settings;
+    private bool _commands;
     private string _listKey = "", _detailKey = "";
     private bool _pending;
     private bool _confirmRemove;
@@ -84,6 +85,7 @@ public sealed class MainWindow : Window
     {
         _selected = id;
         _settings = false;
+        _commands = false;
         _confirmRemove = false;
         Refresh(force: true);
     }
@@ -91,8 +93,32 @@ public sealed class MainWindow : Window
     public void ShowSettings()
     {
         _settings = true;
+        _commands = false;
         Refresh(force: true);
     }
+
+    /// <summary>The PowerShell one-liners page: every app's command (from the catalog) with a Copy button.</summary>
+    public void ShowCommands()
+    {
+        _commands = true;
+        _settings = false;
+        Refresh(force: true);
+    }
+
+    /// <summary>PAX Toolkit's own one-liner first, then every catalog app that has one, in catalog order.</summary>
+    private List<(CatalogApp? App, string Name, string Command, string Note)> Commands()
+    {
+        var list = new List<(CatalogApp?, string, string, string)>
+        {
+            (null, "PAX Toolkit", ToolkitInstallCommand, "Installs or updates PAX Toolkit on any PC, no admin needed."),
+        };
+        foreach (var e in _kit.Apps)
+            if (e.App.InstallCommand is { Length: > 0 } cmd)
+                list.Add((e.App, e.App.Name, cmd, e.App.CommandText));
+        return list;
+    }
+
+    private string CommandsKey() => string.Join("|", _kit.Apps.Select(a => a.App.Id + "=" + a.App.InstallCommand + a.App.CommandNote));
 
     private void OnChanged(AppEntry? e)
     {
@@ -110,7 +136,7 @@ public sealed class MainWindow : Window
 
     public void Refresh(bool force = false)
     {
-        var listKey = string.Join("|", _kit.Apps.Select(RowKey)) + $"|{_selected}|{_settings}|{_kit.Checking}|{_kit.UpdateCount}|{_kit.LastCheckError}|{_kit.ToolkitUpdate?.Tag}";
+        var listKey = string.Join("|", _kit.Apps.Select(RowKey)) + $"|{_selected}|{_settings}|{_commands}|{CommandsKey()}|{_kit.Checking}|{_kit.UpdateCount}|{_kit.LastCheckError}|{_kit.ToolkitUpdate?.Tag}";
         if (force || listKey != _listKey)
         {
             _listKey = listKey;
@@ -128,12 +154,14 @@ public sealed class MainWindow : Window
                 }
         }
 
-        var entry = _settings ? null : _kit.Find(_selected ?? "");
-        var detailKey = _settings ? "settings" + _kit.ToolkitUpdate?.Tag : entry is null ? "none" : DetailKey(entry);
+        var entry = _settings || _commands ? null : _kit.Find(_selected ?? "");
+        var detailKey = _settings ? "settings" + _kit.ToolkitUpdate?.Tag
+            : _commands ? "commands" + CommandsKey()
+            : entry is null ? "none" : DetailKey(entry);
         if (force || detailKey != _detailKey)
         {
             _detailKey = detailKey;
-            _detailHost.Child = _settings ? BuildSettings() : entry is null ? new Panel() : BuildDetail(entry);
+            _detailHost.Child = _settings ? BuildSettings() : _commands ? BuildCommands() : entry is null ? new Panel() : BuildDetail(entry);
         }
         else if (entry is { Busy: true } && _detailBar is not null)
         {
@@ -155,6 +183,7 @@ public sealed class MainWindow : Window
     {
         _list.Children.Clear();
         _rowParts.Clear();
+        _list.Children.Add(CommandsRow());
         var installed = _kit.Apps.Where(a => a.IsInstalled).ToList();
         var available = _kit.Apps.Where(a => !a.IsInstalled).ToList();
         if (installed.Count > 0)
@@ -214,7 +243,7 @@ public sealed class MainWindow : Window
         _rowParts[e.App.Id] = (bar, subText);
 
         var row = new Border { Classes = { "row" }, Child = stack };
-        if (!_settings && string.Equals(_selected, e.App.Id, StringComparison.OrdinalIgnoreCase))
+        if (!_settings && !_commands && string.Equals(_selected, e.App.Id, StringComparison.OrdinalIgnoreCase))
             row.Classes.Add("selected");
         row.PointerPressed += (_, ev) =>
         {
@@ -339,10 +368,7 @@ public sealed class MainWindow : Window
         // Its PowerShell one-liner, for a PC without the toolkit.
         if (app.InstallCommand is { Length: > 0 } cmd)
         {
-            var card = CommandCard("INSTALL WITH POWERSHELL", cmd,
-                app.IsScript
-                    ? $"Runs the latest {app.Name} straight from GitHub, no install needed. Paste it into PowerShell on any PC."
-                    : $"Installs the latest {app.Name} on any PC. Paste it into PowerShell.");
+            var card = CommandCard(app.IsScript || app.CommandNote is not null ? "RUN WITH POWERSHELL" : "INSTALL WITH POWERSHELL", cmd, app.CommandText);
             card.Margin = new Thickness(0, 24, 0, 0);
             root.Children.Add(card);
         }
@@ -599,8 +625,79 @@ public sealed class MainWindow : Window
     /// <summary>The toolkit's own one-line installer (install.ps1, via the paxdigi.com short link).</summary>
     public const string ToolkitInstallCommand = "irm paxdigi.com/toolkit | iex";
 
+    // ───────────────────────────── PowerShell one-liners ─────────────────────────────
+
+    /// <summary>The pinned sidebar row that opens the one-liners page.</summary>
+    private Control CommandsRow()
+    {
+        var count = Commands().Count;
+        var tile = new Border
+        {
+            Width = 36, Height = 36, CornerRadius = new CornerRadius(9), Background = Brush("#0E2A1D"),
+            BorderBrush = new SolidColorBrush(((ISolidColorBrush)Good).Color, 0.5), BorderThickness = new Thickness(1),
+            Child = new TextBlock
+            {
+                Text = ">_", FontFamily = new FontFamily("Cascadia Mono, Consolas, monospace"), FontWeight = FontWeight.Bold,
+                FontSize = 14, Foreground = Good, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+            },
+        };
+        var texts = new StackPanel { Spacing = 1, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 6, 0) };
+        texts.Children.Add(new TextBlock { Text = "PowerShell one-liners", FontSize = 13.5, FontWeight = FontWeight.SemiBold, Foreground = Text });
+        texts.Children.Add(new TextBlock { Text = $"{count} command{(count == 1 ? "" : "s")} to copy", FontSize = 11.5, Foreground = Muted });
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+        grid.Children.Add(tile);
+        Grid.SetColumn(texts, 1);
+        grid.Children.Add(texts);
+        var row = new Border { Classes = { "row" }, Child = grid, Margin = new Thickness(0, 4, 0, 0) };
+        if (_commands)
+            row.Classes.Add("selected");
+        row.PointerPressed += (_, ev) =>
+        {
+            if (ev.GetCurrentPoint(row).Properties.IsLeftButtonPressed)
+                ShowCommands();
+        };
+        return row;
+    }
+
+    private Control BuildCommands()
+    {
+        var panel = new StackPanel { Spacing = 14, Margin = new Thickness(36, 30, 36, 30), MaxWidth = 760, HorizontalAlignment = HorizontalAlignment.Left };
+        panel.Children.Add(new TextBlock { Text = "PowerShell one-liners", FontSize = 26, FontWeight = FontWeight.Bold, Foreground = Text });
+        panel.Children.Add(new TextBlock
+        {
+            Text = "Paste one into PowerShell on any PC, no toolkit needed. New apps show up here on their own when they get a one-liner.",
+            Foreground = Muted, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 6),
+        });
+        foreach (var (app, name, command, note) in Commands())
+        {
+            var icon = app is null ? new Image { Source = AppIcon.Render(64), Width = 30, Height = 30 } : Icons.Image(app, 30);
+            var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+            head.Children.Add(icon);
+            head.Children.Add(new TextBlock { Text = name, FontWeight = FontWeight.SemiBold, FontSize = 15, Foreground = Text, VerticalAlignment = VerticalAlignment.Center });
+            var card = CommandCard(head, command, note);
+            if (app is not null)
+            {
+                ToolTip.SetTip(head, $"Open {name}");
+                head.Cursor = new Cursor(StandardCursorType.Hand);
+                var id = app.Id;
+                head.PointerPressed += (_, ev) =>
+                {
+                    if (ev.GetCurrentPoint(head).Properties.IsLeftButtonPressed)
+                        Select(id);
+                };
+            }
+
+            panel.Children.Add(card);
+        }
+
+        return panel;
+    }
+
     /// <summary>A card with a PowerShell command in a code box and a Copy button.</summary>
-    private Border CommandCard(string label, string command, string note)
+    private Border CommandCard(string label, string command, string note) =>
+        CommandCard(new TextBlock { Text = label, Classes = { "label" } }, command, note);
+
+    private Border CommandCard(Control header, string command, string note)
     {
         var code = new SelectableTextBlock
         {
@@ -646,7 +743,7 @@ public sealed class MainWindow : Window
         };
 
         var stack = new StackPanel { Spacing = 10 };
-        stack.Children.Add(new TextBlock { Text = label, Classes = { "label" } });
+        stack.Children.Add(header);
         stack.Children.Add(box);
         stack.Children.Add(new TextBlock { Text = note, Foreground = Muted, FontSize = 12, TextWrapping = TextWrapping.Wrap });
         return new Border { Classes = { "card" }, Child = stack };

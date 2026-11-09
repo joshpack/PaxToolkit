@@ -12,7 +12,7 @@ One app for all the PAX apps. PAX Toolkit lists every PAX app on GitHub, install
 - **Tray icons on or off.** Every PAX app with a tray icon has a *Tray icon* switch here. Off, the app keeps running without an icon; open it from the toolkit. The app's own settings have the same switch, and both stay in sync (the [PAX App Standard](docs/standard/PAX-APP-STANDARD.md)).
 - **Its own tray icon.** Every installed app is in the tray menu: start it, start it in its own tray, close it, update it, or open its folder. A green dot on the icon means updates are waiting.
 - **Finds what you already have.** Apps already in your Apps folder, or installed with their own setup, show up as installed.
-- **PowerShell one-liners.** Apps that have one (like Startup Scanner) show their `irm … | iex` command with a Copy button, for PCs without the toolkit. The toolkit's own is under *Settings*.
+- **PowerShell one-liners.** *PowerShell one-liners* at the top of the sidebar lists every PAX command (`irm … | iex`) with a Copy button: PAX Toolkit, Startup Scanner, Event Viewer, and any app added later with one. Each app's page shows its own too.
 - **.NET check.** If an app needs a .NET runtime you don't have, the toolkit says so and can install it with winget.
 - **Start menu shortcuts** in *Start → PAX Toolkit* for each app (optional).
 - **New apps show up by themselves.** The app list is `catalog.json` in this repo, which the toolkit reads at every check.
@@ -80,4 +80,4 @@ Needs the .NET 10 SDK. `--self-test <folder>` runs the engine against GitHub wit
 
 ## Adding an app
 
-Add an entry to `catalog.json`: the GitHub repo, a regex for the release asset (`zip` or a PowerShell `script`), the file to start and its folder name. Optional: `installCommand` (a PowerShell one-liner shown with a Copy button), `tray` (the app follows the PAX App Standard tray link, so the toolkit shows its *Tray icon* switch), `openArgs`, `trayArgs` (shows *Start in tray*), `guiArgs`, `elevate`, `knownPaths` and `uninstall` for copies installed by their own setup. Put a 256 px PNG in `Assets/icons/<id>.png` for its picture, or it gets a tile with its initials.
+Add an entry to `catalog.json`: the GitHub repo, a regex for the release asset (`zip` or a PowerShell `script`), the file to start and its folder name. Optional: `installCommand` (a PowerShell one-liner, shown with a Copy button on its page and in *PowerShell one-liners*) and `commandNote` (one line on what it does), `tray` (the app follows the PAX App Standard tray link, so the toolkit shows its *Tray icon* switch), `openArgs`, `trayArgs` (shows *Start in tray*), `guiArgs`, `elevate`, `knownPaths` and `uninstall` for copies installed by their own setup. Put a 256 px PNG in `Assets/icons/<id>.png` for its picture, or it gets a tile with its initials.
