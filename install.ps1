@@ -290,6 +290,24 @@ param([switch]$Install)
             '   :++-          -++:'
             '      -++++++++++-'
         )
+        # The solid-block logo, stored as letters so the file stays ASCII (U = upper half, D = lower half, F = full block).
+        $blocks = @(
+            '      DDDUUUUUUDDD'
+            '    DUU          UUD'
+            '  DU        UFD     UD'
+            ' FU         DDFFD    UF'
+            'DU    DFUUFFFU UUF    UD'
+            'F    DF   F UF   FF    F'
+            'F    FF   FD F   FU    F'
+            'UD    FDD DFFFDDFU    DU'
+            ' FD    UFFUU         DF'
+            '  UD     UFD        DU'
+            '    UDD          DDU'
+            '      UUUDDDDDDUUU'
+        )
+        # One of the two at random, once per run (Show-PdHeader reads the same choice).
+        $script:PdHeaderStyle = Get-Random -Minimum 0 -Maximum 2   # fresh each time the console starts; tools it runs keep the same one
+        $useBlocks = $script:PdHeaderStyle -eq 1
         $text = New-Object System.Collections.Generic.List[object]
         $text.Add(@('pxd Toolkit', 'White'))
         $text.Add(@("$Version  -  pxdtek.com", 'DarkGray'))
@@ -309,7 +327,9 @@ param([switch]$Install)
             $line = if ($j -ge 0 -and $j -lt $text.Count) { $text[$j] } else { @('', 'Gray') }
             Write-Host ('  ' + $line[0].PadRight($leftWidth)) -NoNewline -ForegroundColor $line[1]
             $k = $i - $logoTop
-            if ($showLogo -and $k -ge 0 -and $k -lt $logo.Count) {
+            if ($showLogo -and $k -ge 0 -and $k -lt $logo.Count -and $useBlocks) {
+                Write-Host ($blocks[$k].Replace('U', [string][char]0x2580).Replace('D', [string][char]0x2584).Replace('F', [string][char]0x2588)) -NoNewline -ForegroundColor Cyan
+            } elseif ($showLogo -and $k -ge 0 -and $k -lt $logo.Count) {
                 # dense strokes white, the middle cyan, the edges dark cyan: one colour run at a time
                 $run = ''; $col = ''
                 foreach ($c in $logo[$k].ToCharArray()) {
@@ -420,7 +440,6 @@ param([switch]$Install)
     }
 
     $headers = @{ 'User-Agent' = 'pxdToolkit-cli'; 'Accept' = 'application/vnd.github+json' }
-    $script:PdHeaderStyle = 0   # the ASCII logo
     Show-SysHeader $managerVersion
     while ($true) {
         $rows = @(Show-List)
