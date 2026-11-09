@@ -45,6 +45,12 @@ public sealed class CatalogApp
     /// <summary>Ask for admin rights when starting it.</summary>
     public bool Elevate { get; set; }
 
+    /// <summary>
+    /// The app can update itself in place (PAX Commander), so the toolkit's recorded tag can fall behind: the exe's
+    /// own version wins when it's newer.
+    /// </summary>
+    public bool SelfUpdates { get; set; }
+
     /// <summary>Tile colour for the generated icon when there is no picture.</summary>
     public string Color { get; set; } = "#19F58C";
 

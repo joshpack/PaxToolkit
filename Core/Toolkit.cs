@@ -108,6 +108,9 @@ public sealed class Toolkit : IDisposable
         e.InstallDir = dir;
         e.ExePath = exe;
         e.External = external;
+        // Apps that update themselves (PAX Commander) leave our recorded tag behind: trust the exe when it's newer.
+        if (exe is not null && version is not null && app.SelfUpdates && FileVersion(exe, app.IsScript) is { } own && own > version)
+            version = own;
         e.InstalledVersion = exe is null ? null : version ?? FileVersion(exe, app.IsScript);
         e.MissingRuntimes = exe is null || app.IsScript ? [] : Runtimes.Missing(exe);
         e.IsRunning = exe is not null && !app.IsScript && RunningProcesses(e).Count > 0;

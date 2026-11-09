@@ -111,6 +111,11 @@ internal static class SelfTest
         kit.Settings.Installed[target.App.Id].Tag = "v0.0.1";
         kit.Detect(target);
         Check("update offered for older version", target.UpdateAvailable);
+        // A self-updating app (Commander) that moved past our record: its exe's own version counts, no update.
+        target.App.SelfUpdates = true;
+        kit.Detect(target);
+        Check("self-updated app: the exe's newer version wins over the recorded tag", !target.UpdateAvailable && target.InstalledVersion == target.Latest?.Version);
+        target.App.SelfUpdates = false;
         kit.Settings.Installed[target.App.Id].Tag = target.Latest!.Tag;
         kit.Detect(target);
 

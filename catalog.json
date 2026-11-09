@@ -10,6 +10,7 @@
       "kind": "zip",
       "asset": "^PaxCommander-.*-win-x64-portable\\.zip$",
       "exe": "PaxCommander.exe",
+      "selfUpdates": true,
       "folder": "PaxCommander",
       "color": "#89CFF0",
       "iconUrl": "https://raw.githubusercontent.com/joshpack/PaxToolkit/main/Assets/icons/PaxCommander.png",
