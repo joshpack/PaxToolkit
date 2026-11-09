@@ -110,19 +110,36 @@ param([switch]$Install)
     }
     # ---- end of PD header --------------------------------------------------------------------------------------------
 
-    # ---- -Install: the pxd Toolkit app itself -------------------------------------------------------------------------
-    if ($Install) {
-        Show-PdHeader -Name 'pxd Toolkit' -Version 'installer' -Command $installCmd
+    # ---- GitHub releases: asked once per run and remembered (in memory only), since GitHub allows 60 calls an hour ----
+    $releaseCache = @{}
+    $script:LastGitHubError = ''
+    function Get-LatestRelease([string]$Repo) {
+        if ($releaseCache.ContainsKey($Repo)) { return $releaseCache[$Repo] }
+        $rel = $null
+        try {
+            $rel = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers @{ 'User-Agent' = 'pxdToolkit-cli'; 'Accept' = 'application/vnd.github+json' } -TimeoutSec 20
+        } catch {
+            $code = 0
+            try { $code = [int]$_.Exception.Response.StatusCode } catch { }
+            $script:LastGitHubError = if ($code -eq 403 -or $code -eq 429) { "GitHub's hourly limit for this internet connection is used up. Try again in a while." }
+                                      elseif ($code -eq 404) { 'there is no release yet.' }
+                                      else { $_.Exception.Message }
+        }
+        $releaseCache[$Repo] = $rel
+        $rel
+    }
+
+    # ---- installing the pxd Toolkit app (only when asked: -Install, /tk/install, or yes in the list) --------------------
+    function Install-Toolkit {
         if ([Environment]::OSVersion.Platform -ne 'Win32NT' -or -not [Environment]::Is64BitOperatingSystem) { Say '  pxd Toolkit needs 64-bit Windows 10 or 11.' 'Red'; return }
         $home2 = if ($env:PXDTK_HOME) { $env:PXDTK_HOME } else { Join-Path $env:USERPROFILE 'Apps\pxdToolkit' }
         $exe = Join-Path $home2 'pxdToolkit.exe'
         $headers = @{ 'User-Agent' = 'pxdToolkit-installer'; 'Accept' = 'application/vnd.github+json' }
     
         Say '  Finding the latest release...'
-        try {
-            $rel = Invoke-RestMethod -Uri 'https://api.github.com/repos/joshpack/pxdToolkit/releases/latest' -Headers $headers
-        } catch {
-            Say "  Can't reach GitHub: $($_.Exception.Message)" 'Red'
+        $rel = Get-LatestRelease 'joshpack/pxdToolkit'
+        if (-not $rel) {
+            Say "  Can't get the release from GitHub: $script:LastGitHubError" 'Red'
             return
         }
     
@@ -209,6 +226,11 @@ param([switch]$Install)
             }
         }
         Write-Host ''
+    }
+
+    if ($Install) {
+        Show-PdHeader -Name 'pxd Toolkit' -Version 'installer' -Command $installCmd
+        Install-Toolkit
         return
     }
 
@@ -365,7 +387,8 @@ param([switch]$Install)
             $path = Find-Installed $a $root
             $have = if ($path) { Get-LocalVersion $path } else { '' }
             $latest = ''
-            try { $latest = (Invoke-RestMethod -Uri "https://api.github.com/repos/$($a.repo)/releases/latest" -Headers $headers -TimeoutSec 20).tag_name.TrimStart('v') } catch { }
+            $rel = Get-LatestRelease $a.repo
+            if ($rel) { $latest = $rel.tag_name.TrimStart('v') }
             $rows += [pscustomobject]@{ App = $a; Path = $path; Have = $have; Latest = $latest; Code = $(if ($a.installCommand) { Get-Code $a.installCommand } else { '' }) }
         }
 
@@ -379,14 +402,11 @@ param([switch]$Install)
             if ($r.Path -and $r.Latest -and $r.Have -and (Test-Newer $r.Latest $r.Have)) { $status += ", v$($r.Latest) out"; $color = 'Yellow' }
             Write-Host $status.PadRight(28) -NoNewline -ForegroundColor $color
             if ($r.Code) { Write-Host "irm pxdtek.com/$($r.Code)|iex" -ForegroundColor DarkCyan }
-            else { Write-Host 'the app: install it below' -ForegroundColor DarkGray }
+            elseif ($r.Path) { Write-Host 'the app: pick it to update' -ForegroundColor DarkGray }
+            else { Write-Host 'the app: pick it to install' -ForegroundColor DarkGray }
         }
         Write-Host ''
-        Say '  Tools run in this window. Nothing is installed or saved.' 'DarkGray'
-        Write-Host ''
-        Say '  Install the pxd Toolkit app:' 'Gray'
-        Say "    $installCmd" 'DarkCyan'
-        Say '    or download it: github.com/joshpack/pxdToolkit/releases' 'DarkGray'
+        Say '  Tools run in this window. Nothing is installed or saved unless you pick the Toolkit and say yes.' 'DarkGray'
         Say '  Other apps install from the Toolkit window.' 'DarkGray'
         Write-Host ''
         $rows
@@ -406,13 +426,17 @@ param([switch]$Install)
         $rows = @(Show-List)
         if (-not $rows -or -not $rows[0]) { break }
         $pick = ''
-        try { $pick = (Read-Host '  Number to run (Enter to quit)').Trim() } catch { break }
+        try { $pick = (Read-Host '  Pick a number (Enter to quit)').Trim() } catch { break }
         if (-not $pick) { break }
         $n = 0
         if (-not [int]::TryParse($pick, [ref]$n) -or $n -lt 1 -or $n -gt $rows.Count) { Say "  There's no [$pick]." 'Yellow'; continue }
         $r = $rows[$n - 1]
         if (-not $r.Code) {
-            Say "  $($r.App.name) is an app, not a PowerShell tool. To install it: $installCmd" 'Yellow'
+            # The Toolkit is an app, not a tool: installing it is the one thing this list writes, and only on a yes.
+            $what = if ($r.Path) { 'Update' } else { 'Install' }
+            $yes = ''
+            try { $yes = (Read-Host "  $what pxd Toolkit on this PC (%USERPROFILE%\Apps\pxdToolkit)? (y/N)").Trim().ToLower() } catch { }
+            if ($yes -eq 'y' -or $yes -eq 'yes') { Write-Host ''; try { Install-Toolkit } catch { Say "  That didn't work: $($_.Exception.Message)" 'Red' } }
             continue
         }
         # The tool runs in memory and is told so: it saves nothing on this PC (PXD_INMEMORY lives only in this process).
