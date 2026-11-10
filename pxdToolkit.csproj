@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>pxdToolkit</RootNamespace>
     <AssemblyName>pxdToolkit</AssemblyName>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
     <Product>pxd Toolkit</Product>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon Condition="Exists('Assets\pxdToolkit.ico')">Assets\pxdToolkit.ico</ApplicationIcon>
