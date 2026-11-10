@@ -420,7 +420,7 @@ param([switch]$Install)
             $status = if (-not $r.Path) { 'not installed' } elseif ($r.Have) { "installed v$($r.Have)" } else { 'installed' }
             $color = if (-not $r.Path) { 'DarkGray' } else { 'Green' }
             if ($r.Path -and $r.Latest -and $r.Have -and (Test-Newer $r.Latest $r.Have)) { $status += ", v$($r.Latest) out"; $color = 'Yellow' }
-            Write-Host $status.PadRight(28) -NoNewline -ForegroundColor $color
+            Write-Host ($status + "  ").PadRight(32) -NoNewline -ForegroundColor $color
             if ($r.Code) { Write-Host "irm pxdtek.com/$($r.Code)|iex" -ForegroundColor DarkCyan }
             elseif ($r.Path -and $r.Latest -and $r.Have -and (Test-Newer $r.Latest $r.Have)) { Write-Host 'the app: pick it to update' -ForegroundColor DarkGray }
             elseif ($r.Path) { Write-Host 'the app: up to date' -ForegroundColor DarkGray }
