@@ -119,6 +119,8 @@
       "asset": "^pxdDiagnostics-.*-win-x64\\.zip$",
       "exe": "pxdDiagnostics.exe",
       "folder": "pxdDiagnostics",
+      "installCommand": "irm pxdtek.com/diag | iex",
+      "commandNote": "Runs the console edition on any PC with nothing to install: system info, SFC and DISM repairs (as administrator) and the CBS log summary.",
       "color": "#4DA3FF",
       "iconUrl": "https://raw.githubusercontent.com/joshpack/pxdToolkit/main/Assets/icons/pxdDiagnostics.png"
     },
