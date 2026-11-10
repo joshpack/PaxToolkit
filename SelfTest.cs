@@ -135,10 +135,15 @@ internal static class SelfTest
         Check("start menu shortcut", File.Exists(Path.Combine(Paths.StartMenu, target.App.Name + ".lnk")));
         Check("not running", !target.IsRunning);
 
-        // Fake an older install: an update must be offered.
+        // An older record but a current exe (the app updated itself): the exe's own version counts, no update.
         kit.Settings.Installed[target.App.Id].Tag = "v0.0.1";
         kit.Detect(target);
-        Check("update offered for older version", target.UpdateAvailable);
+        Check("an app that updated itself isn't offered its own version", !target.UpdateAvailable && target.InstalledVersion == target.Latest?.Version);
+        // A newer release out: an update must be offered.
+        var real = target.Latest;
+        target.Latest = real! with { Tag = "v99.0.0" };
+        Check("update offered for a newer release", target.UpdateAvailable);
+        target.Latest = real;
         // A self-updating app (Commander) that moved past our record: its exe's own version counts, no update.
         target.App.SelfUpdates = true;
         kit.Detect(target);
@@ -344,6 +349,16 @@ internal static class SelfTest
             pxdStandard.pxdUpdate.CleanUp(app);
             Check("update: set-aside files removed at next start", Directory.GetFiles(app, "*.pxdold").Length == 0);
             Check("update: version parse", pxdStandard.pxdUpdate.ParseVersion("1.2.1+abc") == new Version(1, 2, 1) && pxdStandard.pxdUpdate.ParseVersion("v1.4") == new Version(1, 4, 0));
+
+            // A start while the app already runs hands over to it, so it must not swap files under that copy.
+            Check("update: this process alone isn't 'another copy'", !pxdStandard.pxdUpdate.OtherCopyRunning(Environment.ProcessPath!));
+            var timeoutExe = Path.Combine(Environment.SystemDirectory, "PING.EXE");
+            using (var other = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(timeoutExe, "-n 8 127.0.0.1") { CreateNoWindow = true, UseShellExecute = false, RedirectStandardOutput = true }))
+            {
+                await Task.Delay(400);
+                Check("update: another running copy is seen (no update then)", pxdStandard.pxdUpdate.OtherCopyRunning(timeoutExe));
+                try { other?.Kill(); } catch { /* ended */ }
+            }
         }
         finally
         {

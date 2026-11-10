@@ -436,6 +436,9 @@ public static class pxdUpdate
                 return false;
             var dir = Path.GetDirectoryName(exe)!;
             CleanUp(dir);
+            // Already running (this start will just hand over to it): never swap files under a running copy.
+            if (OtherCopyRunning(exe))
+                return false;
             if (Environment.GetEnvironmentVariable("PXD_NO_UPDATE") == "1"
                 || args.Any(a => a.Equals("--self-test", StringComparison.OrdinalIgnoreCase) || a.Equals("--no-update", StringComparison.OrdinalIgnoreCase))
                 || dir.Contains(@"\bin\", StringComparison.OrdinalIgnoreCase) || dir.Contains(@"\obj\", StringComparison.OrdinalIgnoreCase))
@@ -581,6 +584,30 @@ public static class pxdUpdate
         {
             /* not readable */
         }
+    }
+
+    /// <summary>Another process started from the same exe file is running.</summary>
+    public static bool OtherCopyRunning(string exe)
+    {
+        var found = false;
+        foreach (var p in System.Diagnostics.Process.GetProcessesByName(Path.GetFileNameWithoutExtension(exe)))
+        {
+            using (p)
+            {
+                if (found || p.Id == Environment.ProcessId)
+                    continue;
+                try
+                {
+                    found = string.Equals(p.MainModule?.FileName, exe, StringComparison.OrdinalIgnoreCase);
+                }
+                catch
+                {
+                    found = true;   // can't tell (elevated copy): assume it's ours and leave the files alone
+                }
+            }
+        }
+
+        return found;
     }
 
     /// <summary>A copy started by an update waits for the old one to close, so its single-instance check doesn't find it.</summary>
