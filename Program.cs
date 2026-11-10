@@ -18,6 +18,10 @@ internal static class Program
     {
         StartMinimized = Has(args, "--minimized");
 
+        // pxd App Standard: a newer release is installed before the toolkit opens (skipped for dev builds and self-tests).
+        if (pxdStandard.pxdUpdate.BeforeStart("joshpack/pxdToolkit", Core.SelfUpdate.AssetPattern, args))
+            return 0;
+
         var test = Array.FindIndex(args, a => a.Equals("--self-test", StringComparison.OrdinalIgnoreCase));
         if (test >= 0 && test + 1 < args.Length)
         {

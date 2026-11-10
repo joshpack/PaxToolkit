@@ -104,6 +104,8 @@ internal static class SelfTest
         File.WriteAllText(Path.Combine(oldInstall, pxdStandard.pxdMigrate.FormerName("pxdDiagnostics.exe")), "");
         Check("old install found", Migration.FormerInstall(kit, kit.Find("pxdDiagnostics")!) is { } found && found.Dir == oldInstall);
 
+        await UpdateSelfTestAsync();
+
         await kit.CheckAsync();
         Line("check error: " + (kit.LastCheckError ?? "none"));
         foreach (var e in kit.Apps)
@@ -276,6 +278,79 @@ internal static class SelfTest
     {
         var i = Array.FindIndex(Args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
         return i >= 0 && i + 1 < Args.Length ? Args[i + 1] : null;
+    }
+
+    /// <summary>pxdUpdate against a fake release served on localhost: found, checksum enforced, files swapped, old ones cleaned up.</summary>
+    private static async Task UpdateSelfTestAsync()
+    {
+        var root = Path.Combine(Dir!, "update");
+        var app = Path.Combine(root, "app");
+        var pkg = Path.Combine(root, "pkg", "Demo");
+        Directory.CreateDirectory(app);
+        Directory.CreateDirectory(pkg);
+        File.WriteAllText(Path.Combine(app, "Demo.exe"), "old exe");
+        File.WriteAllText(Path.Combine(app, "lib.dll"), "old lib");
+        File.WriteAllText(Path.Combine(app, "keep.txt"), "user file");
+        File.WriteAllText(Path.Combine(pkg, "Demo.exe"), "new exe");
+        File.WriteAllText(Path.Combine(pkg, "lib.dll"), "new lib");
+        File.WriteAllText(Path.Combine(pkg, "extra.dll"), "new file");
+        var zip = Path.Combine(root, "Demo-2.0.0-win-x64.zip");
+        System.IO.Compression.ZipFile.CreateFromDirectory(Path.Combine(root, "pkg"), zip);
+        var hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(zip))).ToLowerInvariant();
+
+        var port = new Random().Next(41000, 49000);
+        var prefix = $"http://127.0.0.1:{port}/";
+        using var listener = new System.Net.HttpListener();
+        listener.Prefixes.Add(prefix);
+        listener.Start();
+        var badSum = false;
+        var serving = Task.Run(async () =>
+        {
+            while (listener.IsListening)
+            {
+                System.Net.HttpListenerContext ctx;
+                try { ctx = await listener.GetContextAsync(); } catch { return; }
+                var path = ctx.Request.Url!.AbsolutePath;
+                byte[] body = path switch
+                {
+                    "/repos/joshpack/Demo/releases/latest" => Encoding.UTF8.GetBytes(
+                        $"{{\"tag_name\":\"v2.0.0\",\"assets\":[{{\"name\":\"Demo-2.0.0-win-x64.zip\",\"browser_download_url\":\"{prefix}zip\"}},{{\"name\":\"Demo-2.0.0-win-x64.zip.sha256\",\"browser_download_url\":\"{prefix}sum\"}}]}}"),
+                    "/zip" => File.ReadAllBytes(zip),
+                    "/sum" => Encoding.ASCII.GetBytes((badSum ? new string('0', 64) : hash) + "  Demo-2.0.0-win-x64.zip"),
+                    _ => [],
+                };
+                ctx.Response.StatusCode = body.Length == 0 ? 404 : 200;
+                await ctx.Response.OutputStream.WriteAsync(body);
+                ctx.Response.Close();
+            }
+        });
+
+        Environment.SetEnvironmentVariable("PXD_UPDATE_API", prefix.TrimEnd('/'));
+        try
+        {
+            var plan = await pxdStandard.pxdUpdate.FindUpdateAsync("joshpack/Demo", @"^Demo-.*-win-x64\.zip$", new Version(1, 0, 0));
+            Check("update: newer release found", plan is { Sum: not null });
+            Check("update: current copy left alone", await pxdStandard.pxdUpdate.FindUpdateAsync("joshpack/Demo", @"^Demo-.*-win-x64\.zip$", new Version(2, 0, 0)) is null);
+
+            badSum = true;
+            var refused = !await pxdStandard.pxdUpdate.ApplyAsync(plan!.Value.Zip, plan.Value.Sum, app, Path.Combine(app, "Demo.exe"), [], start: false);
+            Check("update: a bad checksum changes nothing", refused && File.ReadAllText(Path.Combine(app, "Demo.exe")) == "old exe" && !File.Exists(Path.Combine(app, "extra.dll")));
+
+            badSum = false;
+            var ok = await pxdStandard.pxdUpdate.ApplyAsync(plan.Value.Zip, plan.Value.Sum, app, Path.Combine(app, "Demo.exe"), [], start: false);
+            Check("update: files swapped", ok && File.ReadAllText(Path.Combine(app, "Demo.exe")) == "new exe" && File.ReadAllText(Path.Combine(app, "lib.dll")) == "new lib"
+                                         && File.Exists(Path.Combine(app, "extra.dll")) && File.ReadAllText(Path.Combine(app, "keep.txt")) == "user file");
+            Check("update: old files set aside", File.Exists(Path.Combine(app, "Demo.exe.pxdold")) && File.Exists(Path.Combine(app, "lib.dll.pxdold")));
+            pxdStandard.pxdUpdate.CleanUp(app);
+            Check("update: set-aside files removed at next start", Directory.GetFiles(app, "*.pxdold").Length == 0);
+            Check("update: version parse", pxdStandard.pxdUpdate.ParseVersion("1.2.1+abc") == new Version(1, 2, 1) && pxdStandard.pxdUpdate.ParseVersion("v1.4") == new Version(1, 4, 0));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PXD_UPDATE_API", null);
+            listener.Stop();
+            await Task.WhenAny(serving, Task.Delay(2000));
+        }
     }
 
     private static void Check(string what, bool ok)
