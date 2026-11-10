@@ -7,35 +7,64 @@ using ShapePath = Avalonia.Controls.Shapes.Path;
 namespace pxdToolkit;
 
 /// <summary>
-/// pxd Toolkit's icon: a white toolbox holding three app tiles, on a sunset-orange tile.
+/// pxd Toolkit's icon: the PD monogram from pxdtek.com (public/logo.svg in the pxdtek site), in black on a white disc
+/// with a black ring: the site's colours swapped. Same geometry as the SVG (its 1320-unit viewBox starts at 142,52):
+/// a "p" (stem into a round bowl), the same shape turned half a circle for the "d", linked like two rings.
 /// Drawn from vector shapes so it stays crisp at every size; used for the tray, windows and the exe's .ico.
 /// </summary>
 public static class BrandIcon
 {
+    private const string Ink = "#000000";
+    private const string Paper = "#FFFFFF";
+
     /// <summary>The icon as a control (<paramref name="alt"/>: unused).</summary>
     public static Control Build(double size, bool alt = false)
     {
-        var a = new Canvas { Width = 100, Height = 100 };
-        void Fill(string data, string color) =>
-            a.Children.Add(new ShapePath { Data = Geometry.Parse(data), Fill = new SolidColorBrush(Color.Parse(color)) });
-        void Stroke(string data, string color, double width, string? fill = null) =>
-            a.Children.Add(new ShapePath
-            {
-                Data = Geometry.Parse(data), Stroke = new SolidColorBrush(Color.Parse(color)), StrokeThickness = width,
-                StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round,
-                Fill = fill is null ? null : new SolidColorBrush(Color.Parse(fill)),
-            });
+        // Small sizes get bolder strokes so the letters don't blur into grey (16 px is the tray and title bar).
+        var k = size <= 20 ? 2.2 : size <= 32 ? 1.5 : size <= 48 ? 1.2 : 1.0;
 
-        Stroke("M34,34 L34,25 Q34,18 41,18 L59,18 Q66,18 66,25 L66,34", "#FFFFFF", 8);
-        Fill(RoundRect(8, 32, 92, 88, 9), "#FFFFFF");
-        Fill("M8,48 L92,48 L92,54 L8,54 Z", "#E8590C");
-        Fill(RoundRect(22, 43, 32, 59, 3), "#7C2D12");
-        Fill(RoundRect(68, 43, 78, 59, 3), "#7C2D12");
-        Fill(RoundRect(20, 64, 36, 80, 4), "#19C37D");
-        Fill(RoundRect(42, 64, 58, 80, 4), "#1C9BEF");
-        Fill(RoundRect(64, 64, 80, 80, 4), "#A855F7");
-        return Tile(size, "#FFB347", "#FF4E50", a, 0.13);
+        // Everything in the SVG's own coordinates, shifted so its viewBox (142,52 .. 1462,1372) starts at 0,0.
+        var art = new Canvas { Width = 1604, Height = 1604, RenderTransform = new TranslateTransform(-142, -52), RenderTransformOrigin = RelativePoint.TopLeft };
+        art.Children.Add(Disc(k));
+        art.Children.Add(Letter(0, k));
+        art.Children.Add(Letter(180, k));
+        // Where the p crosses over the d: a paper-coloured edge opens a gap in the d, then the p's bowl runs on top.
+        art.Children.Add(Stroke("M 698.3 523.3 A 211 211 0 0 1 836.6 597.0", Paper, 99 * k));
+        art.Children.Add(Stroke("M 667.6 522.1 A 211 211 0 0 1 855.9 624.3", Ink, 63 * k));
+
+        var frame = new Canvas { Width = 1320, Height = 1320, ClipToBounds = true };
+        frame.Children.Add(art);
+        // A little room around the ring so its edge isn't cut at the image border.
+        return new Viewbox { Width = size, Height = size, Child = new Border { Padding = new Thickness(40), Child = frame } };
     }
+
+    private static Control Disc(double k) => new Avalonia.Controls.Shapes.Ellipse
+    {
+        Width = 1258, Height = 1258, Fill = new SolidColorBrush(Color.Parse(Paper)),
+        Stroke = new SolidColorBrush(Color.Parse(Ink)), StrokeThickness = 42 * k,
+        [Canvas.LeftProperty] = 802 - 629.0, [Canvas.TopProperty] = 712 - 629.0,
+    };
+
+    /// <summary>One letter: a stem running into a round bowl, cut flat level with the ground, turned by <paramref name="angle"/>.</summary>
+    private static Control Letter(double angle, double k)
+    {
+        var letter = new Canvas { Width = 1604, Height = 1604, Clip = new RectangleGeometry(new Rect(0, 0, 1604, 1135)) };
+        letter.Children.Add(Stroke("M 796 1155 L 524.5 883.5", Ink, 63 * k));
+        letter.Children.Add(Stroke("M 464 733 A 211 211 0 1 1 886 733 A 211 211 0 1 1 464 733 Z", Ink, 63 * k));
+        if (angle == 0)
+            return letter;
+        // Turned around the logo's centre; the cut happens before the turn, as in the SVG.
+        return new Canvas
+        {
+            Width = 1604, Height = 1604, Children = { letter },
+            RenderTransform = new RotateTransform(angle, 802, 712), RenderTransformOrigin = RelativePoint.TopLeft,
+        };
+    }
+
+    private static ShapePath Stroke(string data, string color, double width) => new()
+    {
+        Data = Geometry.Parse(data), Stroke = new SolidColorBrush(Color.Parse(color)), StrokeThickness = width, StrokeLineCap = PenLineCap.Flat,
+    };
 
     public static RenderTargetBitmap Render(int size, bool alt = false)
     {
