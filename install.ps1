@@ -422,7 +422,8 @@ param([switch]$Install)
             if ($r.Path -and $r.Latest -and $r.Have -and (Test-Newer $r.Latest $r.Have)) { $status += ", v$($r.Latest) out"; $color = 'Yellow' }
             Write-Host $status.PadRight(28) -NoNewline -ForegroundColor $color
             if ($r.Code) { Write-Host "irm pxdtek.com/$($r.Code)|iex" -ForegroundColor DarkCyan }
-            elseif ($r.Path) { Write-Host 'the app: pick it to update' -ForegroundColor DarkGray }
+            elseif ($r.Path -and $r.Latest -and $r.Have -and (Test-Newer $r.Latest $r.Have)) { Write-Host 'the app: pick it to update' -ForegroundColor DarkGray }
+            elseif ($r.Path) { Write-Host 'the app: up to date' -ForegroundColor DarkGray }
             else { Write-Host 'the app: pick it to install' -ForegroundColor DarkGray }
         }
         Write-Host ''
@@ -452,7 +453,7 @@ param([switch]$Install)
         $r = $rows[$n - 1]
         if (-not $r.Code) {
             # The Toolkit is an app, not a tool: installing it is the one thing this list writes, and only on a yes.
-            $what = if ($r.Path) { 'Update' } else { 'Install' }
+            $what = if (-not $r.Path) { 'Install' } elseif ($r.Latest -and $r.Have -and (Test-Newer $r.Latest $r.Have)) { 'Update' } else { 'Reinstall' }
             $yes = ''
             try { $yes = (Read-Host "  $what pxd Toolkit on this PC (%USERPROFILE%\Apps\pxdToolkit)? (y/N)").Trim().ToLower() } catch { }
             if ($yes -eq 'y' -or $yes -eq 'yes') { Write-Host ''; try { Install-Toolkit } catch { Say "  That didn't work: $($_.Exception.Message)" 'Red' } }
