@@ -72,7 +72,10 @@ public partial class App : Application
             // The app list now; the release check soon after start (or right away if the last one is old), then every few hours.
             _ = _kit.RefreshCatalogAsync(_quit.Token);
             var due = _kit.Settings.LastCheckUtc is { } last ? last + CheckEvery - DateTime.UtcNow : TimeSpan.Zero;
-            DispatcherTimer.RunOnce(() => _ = CheckAsync(auto: true), due < TimeSpan.FromSeconds(3) ? TimeSpan.FromSeconds(3) : due > CheckEvery ? CheckEvery : due);
+            // Apps still installed under their former names: check now and move them, whatever the schedule says.
+            if (_kit.Apps.Any(e => Migration.FormerInstall(_kit, e) is not null))
+                due = TimeSpan.Zero;
+            DispatcherTimer.RunOnce(() => _ = due == TimeSpan.Zero ? MigrateNowAsync() : CheckAsync(auto: true), due < TimeSpan.FromSeconds(3) ? TimeSpan.FromSeconds(3) : due > CheckEvery ? CheckEvery : due);
             var timer = new DispatcherTimer { Interval = CheckEvery };
             timer.Tick += (_, _) => _ = CheckAsync(auto: true);
             timer.Start();
@@ -88,6 +91,22 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>A check that always runs (even with update checks off), then the usual check's follow-ups.</summary>
+    private async Task MigrateNowAsync()
+    {
+        try
+        {
+            await _kit.CheckAsync(_quit.Token);
+            await Migration.AppsAsync(_kit, _quit.Token);
+            if (_kit.Settings.AutoUpdate)
+                await UpdateAllAsync();
+        }
+        catch
+        {
+            /* tried again at the next check */
+        }
     }
 
     /// <summary>Checks GitHub; when the user has asked for it, installs every update it finds.</summary>
