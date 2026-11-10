@@ -150,6 +150,21 @@
       "commandNote": "Runs the console edition on any PC with nothing to install: the same snapshot and problem digest, and it never changes anything.",
       "color": "#FF7A45",
       "iconUrl": "https://raw.githubusercontent.com/joshpack/pxdToolkit/main/Assets/icons/pxdEventViewer.png"
+    },
+    {
+      "id": "pxdNetworkScanner",
+      "name": "pxd Network Scanner",
+      "tagline": "What's on your network",
+      "description": "Finds every device on the network and works out what it is: PCs, printers, phones, TVs, routers, NAS, cameras and smart-home gear, with makers, models and open ports.",
+      "repo": "joshpack/pxdNetworkScanner",
+      "kind": "zip",
+      "asset": "^pxdNetworkScanner-.*-win-x64\\.zip$",
+      "exe": "pxdNetworkScanner.exe",
+      "folder": "pxdNetworkScanner",
+      "installCommand": "irm pxdtek.com/ns | iex",
+      "commandNote": "Runs the console edition on any PC with nothing to install: the same scan, device types, filters and export.",
+      "color": "#2F8BFF",
+      "iconUrl": "https://raw.githubusercontent.com/joshpack/pxdToolkit/main/Assets/icons/pxdNetworkScanner.png"
     }
   ]
 }
