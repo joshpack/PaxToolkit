@@ -183,6 +183,9 @@
       "exe": "pxdUninstaller.exe",
       "folder": "pxdUninstaller",
       "elevate": true,
+      "script": "cli/pxdUninstaller.ps1",
+      "installCommand": "irm pxdtek.com/u | iex",
+      "commandNote": "Runs the console edition on any PC with nothing to install: uninstall programs and Store apps (quietly when possible), then pick which leftovers to remove.",
       "color": "#A23CE0",
       "iconUrl": "https://pxdtek.com/raw/pxdToolkit/Assets/icons/pxdUninstaller.png"
     }
