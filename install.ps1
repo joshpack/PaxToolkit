@@ -34,7 +34,7 @@ param([switch]$Install)
     function Say([string]$Text, [string]$Color = 'Gray') { Write-Host $Text -ForegroundColor $Color }
 
     # ---- PD header ---------------------------------------------------------------------------------------------------
-    # The PD logo beside the tool's name, shown once when a pxdtek CLI tool starts. The master copy is cli/PdHeader.ps1
+    # The pxd logo beside the tool's name, shown once when a pxdtek CLI tool starts. The master copy is cli/PdHeader.ps1
     # in the pxdtek repo; each tool carries a copy (they run through irm | iex, so they can't load it). Keep them in sync.
     # ASCII-only on purpose, so irm | iex never trips on encoding: the solid-block logo is stored as letters
     # (U = upper half block, D = lower half block, F = full block) and turned into blocks when it's shown.
@@ -42,32 +42,32 @@ param([switch]$Install)
     function Show-PdHeader {
         param([string]$Name, [string]$Version = '', [string[]]$About = @(), [string]$Command = '')
         $ascii = @(
-            '      -++++++++++-'
-            '   :++-          -++:'
-            '  ++        +#-     ++'
-            ' #-         -+@%-    -#'
-            '++    =##*%#%=-=##.   ++'
-            '%    +%. .@:+%   *#    %'
-            '%    #*   %+:@. .%+    %'
-            '++   .##=-=%#%*##=    ++'
-            ' #-    -%@+-         -#'
-            '  ++     -#+        ++'
-            '   :++-          -++:'
-            '      -++++++++++-'
+            '        .:----:.'
+            '     ---:      =*--'
+            '   -=.         .@. =-'
+            '  +:         :+*@*  .+'
+            ' =:      .  #-. .@:  :='
+            ' *     +++#=#.  :@=   *'
+            ' *    %:  .#=#+++.    *'
+            ' =:   @. .-%  .      :='
+            '  +.  +@*+:         .+'
+            '   -=  @.          =-'
+            '     --*-      .---'
+            '        .:-----.'
         )
         $blocks = @(
-            '      DDDUUUUUUDDD'
-            '    DUU          UUD'
-            '  DU        UFD     UD'
-            ' FU         DDFFD    UF'
-            'DU    DFUUFFFU UUF    UD'
-            'F    DF   F UF   FF    F'
-            'F    FF   FD F   FU    F'
-            'UD    FDD DFFFDDFU    DU'
-            ' FD    UFFUU         DF'
-            '  UD     UFD        DU'
-            '    UDD          DDU'
-            '      UUUDDDDDDUUU'
+            '         DDDDDD'
+            '     DFUU      FFFD'
+            '   DU           F  UD'
+            '  FU         DDFFF  UF'
+            ' DU         FU   FD  UF'
+            ' F     DFUFDF   DFF   F'
+            ' F    FU   FUFDFU     F'
+            ' UD   F   DF         DF'
+            '  FD  FFFUU         DF'
+            '   UD  F           DU'
+            '     UFFF      DDFU'
+            '        UUUUUUUU'
         )
         $text = New-Object System.Collections.Generic.List[object]
         $text.Add(@($Name, 'White'))
@@ -336,33 +336,33 @@ param([switch]$Install)
     # The info on the left, the PD logo on the right (the logo is the same ASCII art as Show-PdHeader's; keep them in step).
     function Show-SysHeader([string]$Version) {
         $logo = @(
-            '      -++++++++++-'
-            '   :++-          -++:'
-            '  ++        +#-     ++'
-            ' #-         -+@%-    -#'
-            '++    =##*%#%=-=##.   ++'
-            '%    +%. .@:+%   *#    %'
-            '%    #*   %+:@. .%+    %'
-            '++   .##=-=%#%*##=    ++'
-            ' #-    -%@+-         -#'
-            '  ++     -#+        ++'
-            '   :++-          -++:'
-            '      -++++++++++-'
+            '        .:----:.'
+            '     ---:      =*--'
+            '   -=.         .@. =-'
+            '  +:         :+*@*  .+'
+            ' =:      .  #-. .@:  :='
+            ' *     +++#=#.  :@=   *'
+            ' *    %:  .#=#+++.    *'
+            ' =:   @. .-%  .      :='
+            '  +.  +@*+:         .+'
+            '   -=  @.          =-'
+            '     --*-      .---'
+            '        .:-----.'
         )
         # The solid-block logo, stored as letters so the file stays ASCII (U = upper half, D = lower half, F = full block).
         $blocks = @(
-            '      DDDUUUUUUDDD'
-            '    DUU          UUD'
-            '  DU        UFD     UD'
-            ' FU         DDFFD    UF'
-            'DU    DFUUFFFU UUF    UD'
-            'F    DF   F UF   FF    F'
-            'F    FF   FD F   FU    F'
-            'UD    FDD DFFFDDFU    DU'
-            ' FD    UFFUU         DF'
-            '  UD     UFD        DU'
-            '    UDD          DDU'
-            '      UUUDDDDDDUUU'
+            '         DDDDDD'
+            '     DFUU      FFFD'
+            '   DU           F  UD'
+            '  FU         DDFFF  UF'
+            ' DU         FU   FD  UF'
+            ' F     DFUFDF   DFF   F'
+            ' F    FU   FUFDFU     F'
+            ' UD   F   DF         DF'
+            '  FD  FFFUU         DF'
+            '   UD  F           DU'
+            '     UFFF      DDFU'
+            '        UUUUUUUU'
         )
         # One of the two at random, once per run (Show-PdHeader reads the same choice).
         $script:PdHeaderStyle = Get-Random -Minimum 0 -Maximum 2   # fresh each time the console starts; tools it runs keep the same one
