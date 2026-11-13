@@ -22,16 +22,16 @@ One app for all the pxd apps. pxd Toolkit lists every pxd app on GitHub, install
 
 | App | What it does |
 | --- | --- |
-| [pxd Commander](https://github.com/joshpack/pxdCommander) | Dual-pane file manager |
-| [pxd Media Manager](https://github.com/joshpack/pxdMediaManager) | Download mover, poster library and player |
-| [pxd Audio Switcher](https://github.com/joshpack/pxdAudioSwitcher) | Audio device hotkeys and profiles |
-| [pxd Auto Clicker](https://github.com/joshpack/pxdAutoClicker) | Hotkey auto clicker |
-| [pxd Chatter Guard](https://github.com/joshpack/pxdChatterGuard) | Keyboard and mouse chatter filter |
-| [pxd Startup Scanner](https://github.com/joshpack/pxdStartupScanner) | Startup items and boot time (PowerShell, runs as admin) |
-| [pxd Watermark](https://github.com/joshpack/pxdWatermark) | Watermark one photo or a whole folder |
-| [pxd Diagnostics](https://github.com/joshpack/pxdDiagnostics) | System info, SFC/DISM repairs, CBS log filter |
-| [pxd Windows Tweaks](https://github.com/joshpack/pxdWindowsTweaks) | Tweaks with undo, debloat, winget installer, fixes, update modes, DNS |
-| [pxd Event Viewer](https://github.com/joshpack/pxdEventViewer) | PC snapshot for tickets, event logs in plain English |
+| [pxd Commander](https://github.com/pxdtek/pxdCommander) | Dual-pane file manager |
+| [pxd Media Manager](https://github.com/pxdtek/pxdMediaManager) | Download mover, poster library and player |
+| [pxd Audio Switcher](https://github.com/pxdtek/pxdAudioSwitcher) | Audio device hotkeys and profiles |
+| [pxd Auto Clicker](https://github.com/pxdtek/pxdAutoClicker) | Hotkey auto clicker |
+| [pxd Chatter Guard](https://github.com/pxdtek/pxdChatterGuard) | Keyboard and mouse chatter filter |
+| [pxd Startup Scanner](https://github.com/pxdtek/pxdStartupScanner) | Startup items and boot time (PowerShell, runs as admin) |
+| [pxd Watermark](https://github.com/pxdtek/pxdWatermark) | Watermark one photo or a whole folder |
+| [pxd Diagnostics](https://github.com/pxdtek/pxdDiagnostics) | System info, SFC/DISM repairs, CBS log filter |
+| [pxd Windows Tweaks](https://github.com/pxdtek/pxdWindowsTweaks) | Tweaks with undo, debloat, winget installer, fixes, update modes, DNS |
+| [pxd Event Viewer](https://github.com/pxdtek/pxdEventViewer) | PC snapshot for tickets, event logs in plain English |
 
 ## Supported systems
 
@@ -59,12 +59,12 @@ irm pxdtek.com/tk | iex
 On its own (also `irm pxdtek.com/i | iex`), the same script installs nothing unless you pick pxd Toolkit in its list and answer yes: it lists the pxd apps that have a PowerShell edition, shows whether each is installed on this PC (and whether an update is out), and runs them in memory. Nothing is saved on the PC, and the tools it runs are told to save nothing either (they only write a file when you ask them to save one). The script is [`install.ps1`](install.ps1); the full address works too:
 
 ```powershell
-irm https://raw.githubusercontent.com/joshpack/pxdToolkit/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/pxdtek/pxdToolkit/main/install.ps1 | iex
 ```
 
 ### By hand
 
-1. Download `pxdToolkit-<version>-win-x64.zip` from [Releases](https://github.com/joshpack/pxdToolkit/releases) and unzip it.
+1. Download `pxdToolkit-<version>-win-x64.zip` from [Releases](https://github.com/pxdtek/pxdToolkit/releases) and unzip it.
 2. Run `pxdToolkit.exe`. It is a single self-contained file, so no .NET install is needed.
 3. Click **Move it there** under **Settings** to keep it in `%USERPROFILE%\Apps\pxdToolkit` with a Start menu shortcut, and tick *Start pxd Toolkit with Windows* if you want the tray icon at sign-in.
 

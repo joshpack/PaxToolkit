@@ -23,12 +23,19 @@ public sealed record Release(string Tag, string Url, DateTime Published, string 
 public sealed class GitHub
 {
     private readonly HttpClient _http;
-    private readonly string _api;
+    private readonly string[] _apis;
 
+    /// <summary>
+    /// Release info comes from pxdtek.com (it asks GitHub on its side, so clients only ever talk to pxdtek.com and
+    /// GitHub's hourly limit is paid once there), and from GitHub itself when pxdtek.com is blocked or down.
+    /// PXDTK_GITHUB_API replaces both (tests).
+    /// </summary>
     public GitHub(HttpClient http)
     {
         _http = http;
-        _api = Environment.GetEnvironmentVariable("PXDTK_GITHUB_API") is { Length: > 0 } api ? api.TrimEnd('/') : "https://api.github.com";
+        _apis = Environment.GetEnvironmentVariable("PXDTK_GITHUB_API") is { Length: > 0 } api
+            ? [api.TrimEnd('/')]
+            : ["https://pxdtek.com/gh", "https://api.github.com"];
     }
 
     public static HttpClient CreateClient()
@@ -64,21 +71,39 @@ public sealed class GitHub
             /* no cache */
         }
 
-        HttpResponseMessage res;
-        using (var req = new HttpRequestMessage(HttpMethod.Get, $"{_api}/repos/{repo}/releases/latest"))
+        HttpResponseMessage? res = null;
+        for (var i = 0; i < _apis.Length && res is null; i++)
         {
+            var last = i == _apis.Length - 1;
+            using var req = new HttpRequestMessage(HttpMethod.Get, $"{_apis[i]}/repos/{repo}/releases/latest");
             req.Headers.Accept.ParseAdd("application/vnd.github+json");
             if (etag is { Length: > 0 } && cached is { Length: > 0 })
                 req.Headers.TryAddWithoutValidation("If-None-Match", etag);
             try
             {
-                res = await _http.SendAsync(req, ct);
+                var r = await _http.SendAsync(req, ct);
+                // A web filter's block page (HTML) or a server error from pxdtek.com: ask the next source instead.
+                var html = r.Content.Headers.ContentType?.MediaType?.Contains("html", StringComparison.OrdinalIgnoreCase) == true;
+                if (!last && (html || (int)r.StatusCode >= 500))
+                {
+                    r.Dispose();
+                    continue;
+                }
+
+                res = r;
+            }
+            catch (HttpRequestException) when (!last)
+            {
+                /* blocked or offline: next source */
             }
             catch (HttpRequestException) when (cached is { Length: > 0 })
             {
                 return ParseRelease(cached);   // offline: show what we knew
             }
         }
+
+        if (res is null)
+            return cached is { Length: > 0 } ? ParseRelease(cached) : throw new HttpRequestException("Can't reach pxdtek.com or GitHub. Check the internet connection.");
 
         using (res)
         {

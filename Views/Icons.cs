@@ -77,10 +77,11 @@ public static class Icons
         }
     }
 
-    /// <summary>Only https pictures from GitHub: the catalog lives there, and nothing else needs to be trusted.</summary>
+    /// <summary>Only https pictures from pxdtek.com or GitHub: the catalog lives there, and nothing else needs to be trusted.</summary>
     public static bool UsableUrl(string? url) =>
         Uri.TryCreate(url, UriKind.Absolute, out var u) && u.Scheme == Uri.UriSchemeHttps
-        && (u.Host.Equals("raw.githubusercontent.com", StringComparison.OrdinalIgnoreCase) || u.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase));
+        && (u.Host.Equals("pxdtek.com", StringComparison.OrdinalIgnoreCase)
+            || u.Host.Equals("raw.githubusercontent.com", StringComparison.OrdinalIgnoreCase) || u.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase));
 
     private static bool NeedsFetch(CatalogApp app)
     {
@@ -99,9 +100,25 @@ public static class Icons
         {
             try
             {
-                using var resp = await Http.GetAsync(app.IconUrl, HttpCompletionOption.ResponseHeadersRead);
-                if (!resp.IsSuccessStatusCode || resp.Content.Headers.ContentLength > MaxBytes) return null;
-                var bytes = await resp.Content.ReadAsByteArrayAsync();
+                // pxdtek.com first; its GitHub copy when pxdtek.com is blocked (a block page isn't a PNG, so it's caught below).
+                byte[]? bytes = null;
+                foreach (var url in new[] { app.IconUrl!, Core.Catalog.GitHubCopy(app.IconUrl!) })
+                {
+                    if (url is null) continue;
+                    try
+                    {
+                        using var resp = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                        if (!resp.IsSuccessStatusCode || resp.Content.Headers.ContentLength > MaxBytes) continue;
+                        var got = await resp.Content.ReadAsByteArrayAsync();
+                        if (got.Length >= 8 && got[0] == 0x89 && got[1] == (byte)'P') { bytes = got; break; }
+                    }
+                    catch
+                    {
+                        /* next */
+                    }
+                }
+
+                if (bytes is null) return null;
                 // A PNG, of sensible size, that actually decodes; anything else keeps the current picture.
                 if (bytes.Length is < 8 or > MaxBytes || bytes[0] != 0x89 || bytes[1] != (byte)'P' || bytes[2] != (byte)'N' || bytes[3] != (byte)'G') return null;
                 Bitmap bmp;

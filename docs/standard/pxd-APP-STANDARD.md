@@ -10,7 +10,7 @@ Every pxd app follows these rules.
    - The Toolkit catalog marks these apps with `"tray": true`.
 4. **Own icon** (`BrandIcon.cs`), neon theme, `--self-test` that never shows anything on screen, README with current screenshots.
 5. **Moves its own leftovers.** On first run after a rename, an app moves its settings folders and startup entries from its former name (`pxdMigrate` in pxdStandard.cs: `Folder`, `RunEntry`, and the shared toolkit.json). Every move is safe to repeat and never throws. The Toolkit moves install folders the same way.
-6. **Updates itself before it opens.** First thing in Main (before the single-instance check): `if (pxdUpdate.BeforeStart("joshpack/<repo>", "<release asset regex>", args)) return;`. It asks GitHub (4 s at most, skipped offline, for dev builds in bin and for --self-test), installs a newer release in place (SHA-256 checked, running files set aside as *.pxdold and removed next start) and restarts the app with the same arguments. PXD_NO_UPDATE=1 turns it off.
+6. **Updates itself before it opens.** First thing in Main (before the single-instance check): `if (pxdUpdate.BeforeStart("pxdtek/<repo>", "<release asset regex>", args)) return;`. It asks GitHub (4 s at most, skipped offline, for dev builds in bin and for --self-test), installs a newer release in place (SHA-256 checked, running files set aside as *.pxdold and removed next start) and restarts the app with the same arguments. PXD_NO_UPDATE=1 turns it off.
 
 Avalonia apps copy [`pxdStandard.cs`](pxdStandard.cs) unchanged. Auto Clicker (WinForms) and Startup Scanner (PowerShell/WPF) follow the same rules in their own toolkit.
 

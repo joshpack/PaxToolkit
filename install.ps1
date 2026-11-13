@@ -9,7 +9,10 @@
     shortcut, started in the tray; its window opens only if you say so):
       irm pxdtek.com/tk/install|iex
     (the same as: & ([scriptblock]::Create((irm pxdtek.com/tk))) -Install)
-    or download it from https://github.com/joshpack/pxdToolkit/releases. Other apps install from the Toolkit's window.
+    or download it from https://github.com/pxdtek/pxdToolkit/releases. Other apps install from the Toolkit's window.
+
+    On a network that blocks pxdtek.com, run it from GitHub instead; everything then comes from GitHub:
+      irm https://raw.githubusercontent.com/pxdtek/pxdToolkit/main/install.ps1 | iex
 
     -Install options (environment variables):
       $env:PXDTK_HOME     = 'D:\Tools\pxdToolkit'   install somewhere else
@@ -110,20 +113,75 @@ param([switch]$Install)
     }
     # ---- end of PD header --------------------------------------------------------------------------------------------
 
-    # ---- GitHub releases: asked once per run and remembered (in memory only), since GitHub allows 60 calls an hour ----
+    # ---- where things come from: pxdtek.com first, GitHub (github.com/pxdtek) when a network blocks pxdtek.com ----------
+    # pxdtek.com fetches from GitHub on its side, so normally this PC only ever talks to pxdtek.com.
+    $script:PxdBlocked = $false
+    $script:ProbeFailed = $false
+    # HTML, not a script: a PowerShell script may well start with a '<#' comment, so look for real HTML tags.
+    function Test-BlockPage($Body) { ($Body -is [string]) -and ($Body -match '^\s*<(!doctype|html|head|body|meta|title|script|div|\?xml)') }
+    function Note-Blocked {
+        if (-not $script:PxdBlocked) {
+            $script:PxdBlocked = $true
+            Say '  pxdtek.com is blocked or unreachable on this network; using GitHub instead.' 'DarkYellow'
+        }
+    }
+    # pxdtek.com's copy of a release download or repo file -> the same thing on GitHub.
+    function Get-GitHubCopy([string]$Url) {
+        if ($Url -match '^https://pxdtek\.com/dl/([^/]+)/([^/]+)/([^/]+)$') { return "https://github.com/pxdtek/$($Matches[1])/releases/download/$($Matches[2])/$($Matches[3])" }
+        if ($Url -match '^https://pxdtek\.com/raw/([^/]+)/(.+)$') { return "https://raw.githubusercontent.com/pxdtek/$($Matches[1])/HEAD/$($Matches[2])" }
+        $null
+    }
+    # Text or JSON from pxdtek.com, else its GitHub copy. A filter's block page (HTML) counts as blocked.
+    function Get-Remote([string]$Url, [int]$Timeout = 20) {
+        $h = @{ 'User-Agent' = 'WindowsPowerShell pxdToolkit-cli' }
+        if (-not $script:PxdBlocked -or -not (Get-GitHubCopy $Url)) {
+            try {
+                $r = Invoke-RestMethod -Uri $Url -Headers $h -TimeoutSec $Timeout
+                if (-not (Test-BlockPage $r)) { return $r }
+            } catch { if (-not (Get-GitHubCopy $Url)) { throw } }
+            Note-Blocked
+        }
+        Invoke-RestMethod -Uri (Get-GitHubCopy $Url) -Headers $h -TimeoutSec $Timeout
+    }
+    # A release download to a file, from pxdtek.com or (blocked) GitHub.
+    function Save-Remote([string]$Url, [string]$OutFile) {
+        $h = @{ 'User-Agent' = 'pxdToolkit-installer' }
+        if (-not $script:PxdBlocked) {
+            try {
+                Invoke-WebRequest -Uri $Url -OutFile $OutFile -UseBasicParsing -Headers $h
+                $head = [IO.File]::ReadAllBytes($OutFile) | Select-Object -First 1
+                if ($head -ne 0x3C) { return }   # not '<': a real download, not a block page
+            } catch { }
+            Note-Blocked
+        }
+        $alt = Get-GitHubCopy $Url
+        if (-not $alt) { throw "Couldn't download $Url" }
+        Invoke-WebRequest -Uri $alt -OutFile $OutFile -UseBasicParsing -Headers $h
+    }
+
+    # ---- releases: asked once per run and remembered (in memory only) ---------------------------------------------------
     $releaseCache = @{}
     $script:LastGitHubError = ''
     function Get-LatestRelease([string]$Repo) {
         if ($releaseCache.ContainsKey($Repo)) { return $releaseCache[$Repo] }
         $rel = $null
-        try {
-            $rel = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers @{ 'User-Agent' = 'pxdToolkit-cli'; 'Accept' = 'application/vnd.github+json' } -TimeoutSec 20
-        } catch {
-            $code = 0
-            try { $code = [int]$_.Exception.Response.StatusCode } catch { }
-            $script:LastGitHubError = if ($code -eq 403 -or $code -eq 429) { "GitHub's hourly limit for this internet connection is used up. Try again in a while." }
-                                      elseif ($code -eq 404) { 'there is no release yet.' }
-                                      else { $_.Exception.Message }
+        $bases = if ($script:PxdBlocked) { @('https://api.github.com') } else { @('https://pxdtek.com/gh', 'https://api.github.com') }
+        foreach ($b in $bases) {
+            try {
+                $r = Invoke-RestMethod -Uri "$b/repos/$Repo/releases/latest" -Headers @{ 'User-Agent' = 'pxdToolkit-cli'; 'Accept' = 'application/vnd.github+json' } -TimeoutSec 20
+                if ($r -and -not (Test-BlockPage $r) -and $r.tag_name) { $rel = $r; break }
+                if ($b -like 'https://pxdtek.com*') { Note-Blocked }
+            } catch {
+                $code = 0
+                try { $code = [int]$_.Exception.Response.StatusCode } catch { }
+                if ($b -like 'https://pxdtek.com*') {
+                    if ($code -eq 404) { $script:LastGitHubError = 'there is no release yet.'; break }
+                    Note-Blocked; continue
+                }
+                $script:LastGitHubError = if ($code -eq 403 -or $code -eq 429) { "GitHub's hourly limit for this internet connection is used up. Try again in a while." }
+                                          elseif ($code -eq 404) { 'there is no release yet.' }
+                                          else { $_.Exception.Message }
+            }
         }
         $releaseCache[$Repo] = $rel
         $rel
@@ -137,7 +195,7 @@ param([switch]$Install)
         $headers = @{ 'User-Agent' = 'pxdToolkit-installer'; 'Accept' = 'application/vnd.github+json' }
     
         Say '  Finding the latest release...'
-        $rel = Get-LatestRelease 'joshpack/pxdToolkit'
+        $rel = Get-LatestRelease 'pxdtek/pxdToolkit'
         if (-not $rel) {
             Say "  Can't get the release from GitHub: $script:LastGitHubError" 'Red'
             return
@@ -162,10 +220,10 @@ param([switch]$Install)
         try {
             $zip = Join-Path $tmp $asset.name
             Say '  Downloading...'
-            Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zip -UseBasicParsing -Headers @{ 'User-Agent' = 'pxdToolkit-installer' }
-    
+            Save-Remote $asset.browser_download_url $zip
+
             if ($sum) {
-                $expected = ([string](Invoke-RestMethod -Uri $sum.browser_download_url -Headers @{ 'User-Agent' = 'pxdToolkit-installer' })).Trim().Split(' ')[0].ToLowerInvariant()
+                $expected = ([string](Get-Remote $sum.browser_download_url)).Trim().Split(' ')[0].ToLowerInvariant()
                 $sha = [Security.Cryptography.SHA256]::Create()
                 $fs = [IO.File]::OpenRead($zip)
                 try { $actual = -join ($sha.ComputeHash($fs) | ForEach-Object { $_.ToString('x2') }) } finally { $fs.Dispose(); $sha.Dispose() }
@@ -270,6 +328,7 @@ param([switch]$Install)
         } catch { }
         $wan = ''
         try { $wan = ([string](Invoke-RestMethod -Uri 'https://pxdtek.com/ip' -UserAgent 'pxdToolkit-cli' -TimeoutSec 5)).Trim() } catch { }
+        if ($wan -notmatch '^[0-9a-fA-F:.]{3,45}$') { $wan = ''; $script:ProbeFailed = $true }   # no answer, or a filter's block page: use GitHub from the start
         if ($wan -and $wan -ne 'unknown') { Add 'WAN IP' $wan }
         $L
     }
@@ -394,13 +453,15 @@ param([switch]$Install)
 
     function Show-List {
         Say '  Checking this PC...' 'DarkGray'
+        if ($script:ProbeFailed) { Note-Blocked }
         # PXDTK_CATALOG: a local catalog.json, for testing.
         try {
             $catalog = if ($env:PXDTK_CATALOG) { Get-Content -LiteralPath $env:PXDTK_CATALOG -Raw | ConvertFrom-Json }
-                       else { Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/joshpack/pxdToolkit/main/catalog.json' -Headers @{ 'User-Agent' = 'pxdToolkit-cli' } -TimeoutSec 20 }
-        } catch { Say "  Can't reach GitHub: $($_.Exception.Message)" 'Red'; return $null }
+                       else { Get-Remote 'https://pxdtek.com/raw/pxdToolkit/catalog.json' }
+            if ($catalog -is [string]) { $catalog = $catalog | ConvertFrom-Json }
+        } catch { Say "  Can't reach pxdtek.com or GitHub: $($_.Exception.Message)" 'Red'; return $null }
         $root = Get-AppsRoot
-        $apps = @([pscustomobject]@{ id = 'pxdToolkit'; name = 'pxd Toolkit'; repo = 'joshpack/pxdToolkit'; exe = 'pxdToolkit.exe'; folder = 'pxdToolkit'; installCommand = ''; tagline = 'The app that installs, updates and opens every pxd app' })
+        $apps = @([pscustomobject]@{ id = 'pxdToolkit'; name = 'pxd Toolkit'; repo = 'pxdtek/pxdToolkit'; exe = 'pxdToolkit.exe'; folder = 'pxdToolkit'; installCommand = ''; tagline = 'The app that installs, updates and opens every pxd app' })
         $apps += @($catalog.apps | Where-Object { $_.installCommand })
         $rows = @()
         foreach ($a in $apps) {
@@ -436,7 +497,20 @@ param([switch]$Install)
     # Runs a tool's script in memory, the same thing its one-liner does; this list comes back when it ends.
     function Invoke-Tool($Row) {
         Say "  Starting $($Row.App.name)..." 'DarkGray'
-        $code = Invoke-RestMethod -Uri ('https://pxdtek.com/' + $Row.Code) -Headers @{ 'User-Agent' = 'WindowsPowerShell pxdToolkit-cli' } -TimeoutSec 30
+        $code = $null
+        if (-not $script:PxdBlocked) {
+            try {
+                $code = Invoke-RestMethod -Uri ('https://pxdtek.com/' + $Row.Code) -Headers @{ 'User-Agent' = 'WindowsPowerShell pxdToolkit-cli' } -TimeoutSec 30
+                if (Test-BlockPage $code) { $code = $null }
+            } catch { }
+            if (-not $code) { Note-Blocked }
+        }
+        # Never run a web filter's block page: the script itself, from GitHub, when pxdtek.com can't be used.
+        if (-not $code) {
+            if (-not $Row.App.script) { throw "pxdtek.com is blocked here and there's no GitHub copy of this tool's script." }
+            $code = Invoke-RestMethod -Uri ("https://raw.githubusercontent.com/$($Row.App.repo)/HEAD/$($Row.App.script)") -Headers @{ 'User-Agent' = 'pxdToolkit-cli' } -TimeoutSec 30
+            if (Test-BlockPage $code) { throw 'GitHub is blocked on this network too.' }
+        }
         & ([scriptblock]::Create([string]$code))
     }
 

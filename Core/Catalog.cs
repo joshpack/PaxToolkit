@@ -87,7 +87,19 @@ public sealed class CatalogFile
 /// </summary>
 public static class Catalog
 {
-    public const string RemoteUrl = "https://raw.githubusercontent.com/joshpack/pxdToolkit/main/catalog.json";
+    /// <summary>Where the list is fetched from, in order: pxdtek.com (clients only talk to pxdtek.com), then GitHub.</summary>
+    public static readonly string[] RemoteUrls =
+    [
+        "https://pxdtek.com/raw/pxdToolkit/catalog.json",
+        "https://raw.githubusercontent.com/pxdtek/pxdToolkit/main/catalog.json",
+    ];
+
+    /// <summary>pxdtek.com's copy of a repo file → the same file on GitHub (the fallback when pxdtek.com is blocked).</summary>
+    public static string? GitHubCopy(string url)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(url, @"^https://pxdtek\.com/raw/([^/]+)/(.+)$");
+        return m.Success ? $"https://raw.githubusercontent.com/pxdtek/{m.Groups[1].Value}/HEAD/{m.Groups[2].Value}" : null;
+    }
 
     public static readonly JsonSerializerOptions Json = new()
     {
@@ -132,25 +144,31 @@ public static class Catalog
         return r.ReadToEnd();
     }
 
-    /// <summary>Fetches the list from GitHub and caches it; null when offline or the file is bad.</summary>
+    /// <summary>Fetches the list (pxdtek.com, else GitHub) and caches it; null when offline or the file is bad.</summary>
     public static async Task<List<CatalogApp>?> FetchRemoteAsync(HttpClient http, CancellationToken ct = default)
     {
         if (Environment.GetEnvironmentVariable("PXDTK_NO_REMOTE_CATALOG") is not null)
             return null;
-        try
+        foreach (var url in RemoteUrls)
         {
-            var text = await http.GetStringAsync(RemoteUrl, ct);
-            var apps = Parse(text);
-            if (apps is null)
-                return null;
-            Directory.CreateDirectory(Paths.Data);
-            await File.WriteAllTextAsync(CachePath, text, ct);
-            return apps;
+            try
+            {
+                var text = await http.GetStringAsync(url, ct);
+                // A web filter's block page isn't a list: Parse returns null and the next source is tried.
+                var apps = Parse(text);
+                if (apps is null)
+                    continue;
+                Directory.CreateDirectory(Paths.Data);
+                await File.WriteAllTextAsync(CachePath, text, ct);
+                return apps;
+            }
+            catch (Exception) when (!ct.IsCancellationRequested)
+            {
+                /* blocked or offline: next */
+            }
         }
-        catch
-        {
-            return null;
-        }
+
+        return null;
     }
 
     public static List<CatalogApp>? Parse(string? text)

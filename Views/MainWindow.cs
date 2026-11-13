@@ -606,7 +606,7 @@ public sealed class MainWindow : Window
             new TextBlock { Text = "New apps go into their own folder in here. Apps that are already installed stay where they are.", Foreground = Muted, FontSize = 12, TextWrapping = TextWrapping.Wrap }));
         panel.Children.Add(Section("ABOUT",
             new TextBlock { Text = $"pxd Toolkit v{Versions.Show(Versions.Current)} · settings in {Paths.Data}", Foreground = Muted, TextWrapping = TextWrapping.Wrap },
-            Link("pxd Toolkit on GitHub", () => Toolkit.OpenUrl("https://github.com/joshpack/pxdToolkit"))));
+            Link("pxd Toolkit on GitHub", () => Toolkit.OpenUrl("https://github.com/pxdtek/pxdToolkit"))));
         return panel;
     }
 

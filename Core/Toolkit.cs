@@ -260,7 +260,7 @@ public sealed class Toolkit : IDisposable
 
             try
             {
-                var self = await _github.LatestAsync("joshpack/pxdToolkit", ct);
+                var self = await _github.LatestAsync("pxdtek/pxdToolkit", ct);
                 ToolkitUpdate = self?.Version is { } v && v > Versions.Current && self.Find(SelfUpdate.AssetPattern) is not null ? self : null;
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -310,11 +310,21 @@ public sealed class Toolkit : IDisposable
             if (release.ChecksumFor(asset) is { } sumAsset)
             {
                 Report(e, "Checking the download…", 0.92);
-                var expected = Regex.Match(await _http.GetStringAsync(sumAsset.Url, ct), "[0-9a-fA-F]{64}").Value;
+                string sumText;
+                try
+                {
+                    sumText = await _http.GetStringAsync(sumAsset.Url, ct);
+                }
+                catch (HttpRequestException) when (pxdStandard.pxdUpdate.GitHubCopy(sumAsset.Url) is { } alt)
+                {
+                    sumText = await _http.GetStringAsync(alt, ct);
+                }
+
+                var expected = Regex.Match(sumText, "[0-9a-fA-F]{64}").Value;
                 string actual;
                 await using (var fs = File.OpenRead(download))
                     actual = Convert.ToHexString(await SHA256.HashDataAsync(fs, ct));
-                if (expected.Length == 64 && !expected.Equals(actual, StringComparison.OrdinalIgnoreCase))
+                if (expected.Length != 64 || !expected.Equals(actual, StringComparison.OrdinalIgnoreCase))   // no hash (a block page) counts as a failure
                     throw new InvalidOperationException("The download is damaged (checksum doesn't match). Try again.");
             }
 
@@ -370,8 +380,20 @@ public sealed class Toolkit : IDisposable
 
     private async Task DownloadAsync(ReleaseAsset asset, string path, Action<double> progress, CancellationToken ct)
     {
-        using var res = await _http.GetAsync(asset.Url, HttpCompletionOption.ResponseHeadersRead, ct);
-        res.EnsureSuccessStatusCode();
+        // pxdtek.com's copy first; the same file from GitHub when pxdtek.com is blocked or down.
+        HttpResponseMessage res;
+        try
+        {
+            res = await _http.GetAsync(asset.Url, HttpCompletionOption.ResponseHeadersRead, ct);
+            res.EnsureSuccessStatusCode();
+        }
+        catch (HttpRequestException) when (pxdStandard.pxdUpdate.GitHubCopy(asset.Url) is { } alt)
+        {
+            res = await _http.GetAsync(alt, HttpCompletionOption.ResponseHeadersRead, ct);
+            res.EnsureSuccessStatusCode();
+        }
+
+        using var _ = res;
         var total = res.Content.Headers.ContentLength ?? asset.Size;
         await using var src = await res.Content.ReadAsStreamAsync(ct);
         await using var dst = File.Create(path);

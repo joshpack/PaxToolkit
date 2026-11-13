@@ -88,7 +88,7 @@ internal static class SelfTest
             var cached = Path.Combine(Paths.Data, "icons", "pxdEventViewer.png");
             Check($"Event Viewer icon downloads and is cached ({(got is null ? "none" : $"{got.PixelSize.Width}x{got.PixelSize.Height}")})", got is not null && File.Exists(cached));
         }
-        var bad = new CatalogApp { Id = "IconTestMissing", Name = "Icon Test", IconUrl = "https://raw.githubusercontent.com/joshpack/pxdToolkit/main/Assets/icons/does-not-exist.png" };
+        var bad = new CatalogApp { Id = "IconTestMissing", Name = "Icon Test", IconUrl = "https://pxdtek.com/raw/pxdToolkit/Assets/icons/does-not-exist.png" };
         Check("a missing icon falls back (no picture, no crash)", await Views.Icons.FetchAsync(bad) is null && Views.Icons.For(bad) is not null);
         // Former names: folders move once, Run command arguments survive, old installs are found.
         var mig = Path.Combine(Dir!, "migrate");
@@ -318,7 +318,7 @@ internal static class SelfTest
                 var path = ctx.Request.Url!.AbsolutePath;
                 byte[] body = path switch
                 {
-                    "/repos/joshpack/Demo/releases/latest" => Encoding.UTF8.GetBytes(
+                    "/repos/pxdtek/Demo/releases/latest" => Encoding.UTF8.GetBytes(
                         $"{{\"tag_name\":\"v2.0.0\",\"assets\":[{{\"name\":\"Demo-2.0.0-win-x64.zip\",\"browser_download_url\":\"{prefix}zip\"}},{{\"name\":\"Demo-2.0.0-win-x64.zip.sha256\",\"browser_download_url\":\"{prefix}sum\"}}]}}"),
                     "/zip" => File.ReadAllBytes(zip),
                     "/sum" => Encoding.ASCII.GetBytes((badSum ? new string('0', 64) : hash) + "  Demo-2.0.0-win-x64.zip"),
@@ -333,9 +333,9 @@ internal static class SelfTest
         Environment.SetEnvironmentVariable("PXD_UPDATE_API", prefix.TrimEnd('/'));
         try
         {
-            var plan = await pxdStandard.pxdUpdate.FindUpdateAsync("joshpack/Demo", @"^Demo-.*-win-x64\.zip$", new Version(1, 0, 0));
+            var plan = await pxdStandard.pxdUpdate.FindUpdateAsync("pxdtek/Demo", @"^Demo-.*-win-x64\.zip$", new Version(1, 0, 0));
             Check("update: newer release found", plan is { Sum: not null });
-            Check("update: current copy left alone", await pxdStandard.pxdUpdate.FindUpdateAsync("joshpack/Demo", @"^Demo-.*-win-x64\.zip$", new Version(2, 0, 0)) is null);
+            Check("update: current copy left alone", await pxdStandard.pxdUpdate.FindUpdateAsync("pxdtek/Demo", @"^Demo-.*-win-x64\.zip$", new Version(2, 0, 0)) is null);
 
             badSum = true;
             var refused = !await pxdStandard.pxdUpdate.ApplyAsync(plan!.Value.Zip, plan.Value.Sum, app, Path.Combine(app, "Demo.exe"), [], start: false);
