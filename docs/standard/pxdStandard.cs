@@ -561,18 +561,28 @@ public static class pxdUpdate
             var zip = Path.Combine(stage, "update.zip");
             using (var http = Client(TimeSpan.FromMinutes(5)))
             {
+                var got = false;
                 try
                 {
-                    await using var src = await http.GetStreamAsync(zipUrl);
-                    await using var dst = File.Create(zip);
-                    await src.CopyToAsync(dst);
+                    await using (var src = await http.GetStreamAsync(zipUrl))
+                    await using (var dst = File.Create(zip))
+                        await src.CopyToAsync(dst);
+                    got = IsZip(zip);   // a web filter's block page is not a zip
                 }
-                catch when (GitHubCopy(zipUrl) is { } alt)
+                catch when (GitHubCopy(zipUrl) is not null)
                 {
-                    // pxdtek.com blocked or down: the same file straight from GitHub.
-                    await using var src = await http.GetStreamAsync(alt);
-                    await using var dst = File.Create(zip);
-                    await src.CopyToAsync(dst);
+                    /* pxdtek.com blocked or down: GitHub below */
+                }
+
+                if (!got)
+                {
+                    // The same file straight from GitHub.
+                    var alt = GitHubCopy(zipUrl) ?? throw new InvalidOperationException("download failed");
+                    await using (var src = await http.GetStreamAsync(alt))
+                    await using (var dst = File.Create(zip))
+                        await src.CopyToAsync(dst);
+                    if (!IsZip(zip))
+                        return false;
                 }
 
                 if (sumUrl is not null)
@@ -630,6 +640,20 @@ public static class pxdUpdate
         finally
         {
             try { Directory.Delete(stage, true); } catch { /* temp */ }
+        }
+    }
+
+    /// <summary>The file starts like a zip ("PK"), not like a web filter's HTML block page.</summary>
+    public static bool IsZip(string path)
+    {
+        try
+        {
+            using var fs = File.OpenRead(path);
+            return fs.ReadByte() == 'P' && fs.ReadByte() == 'K';
+        }
+        catch
+        {
+            return false;
         }
     }
 
