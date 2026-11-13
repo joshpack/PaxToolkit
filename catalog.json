@@ -171,6 +171,20 @@
       "commandNote": "Runs the console edition on any PC with nothing to install: the same scan, device types, filters and export.",
       "color": "#2F8BFF",
       "iconUrl": "https://pxdtek.com/raw/pxdToolkit/Assets/icons/pxdNetworkScanner.png"
+    },
+    {
+      "id": "pxdUninstaller",
+      "name": "pxd Uninstaller",
+      "tagline": "Remove programs and their leftovers",
+      "description": "Uninstalls programs and Store apps the normal way or all the way: shows the folders, registry keys, shortcuts, services, tasks and firewall rules they leave behind so you pick what goes. Batch and forced uninstall, find by window, restore points, quiet command line (pxdu).",
+      "repo": "pxdtek/pxdUninstaller",
+      "kind": "zip",
+      "asset": "^pxdUninstaller-.*-win-x64\\.zip$",
+      "exe": "pxdUninstaller.exe",
+      "folder": "pxdUninstaller",
+      "elevate": true,
+      "color": "#A23CE0",
+      "iconUrl": "https://pxdtek.com/raw/pxdToolkit/Assets/icons/pxdUninstaller.png"
     }
   ]
 }
