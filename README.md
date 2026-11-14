@@ -62,6 +62,8 @@ On its own (also `irm pxdtek.com/i | iex`), the same script installs nothing unl
 irm https://raw.githubusercontent.com/pxdtek/pxdToolkit/main/install.ps1 | iex
 ```
 
+**R: Report on this PC** runs [pxd Report](https://github.com/pxdtek/pxdReport): a read-only report of the whole PC (hardware, drive and crash health, security, network, startup items, programs and updates), encrypted on the PC and put on pxdtek.com for 48 hours behind a private link and a QR code. Open the link on your own PC to copy or download it. Made for remote sessions such as ScreenConnect Backstage, where the clipboard doesn't come back.
+
 ### By hand
 
 1. Download `pxdToolkit-<version>-win-x64.zip` from [Releases](https://github.com/pxdtek/pxdToolkit/releases) and unzip it.

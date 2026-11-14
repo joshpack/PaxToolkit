@@ -478,6 +478,10 @@ param([switch]$Install)
             else { Write-Host 'the app: pick it to install' -ForegroundColor DarkGray }
         }
         Write-Host ''
+        Write-Host '   [R] ' -NoNewline -ForegroundColor Cyan
+        Write-Host ('Report on this PC'.PadRight(22)) -NoNewline -ForegroundColor White
+        Write-Host 'everything about this PC on a private link (48 hours)' -ForegroundColor DarkGray
+        Write-Host ''
         Say '  Tools run in this window. Nothing is installed or saved unless you pick the Toolkit and say yes.' 'DarkGray'
         Say '  Other apps install from the Toolkit window.' 'DarkGray'
         Write-Host ''
@@ -510,8 +514,19 @@ param([switch]$Install)
         $rows = @(Show-List)
         if (-not $rows -or -not $rows[0]) { break }
         $pick = ''
-        try { $pick = (Read-Host '  Pick a number (Enter to quit)').Trim() } catch { break }
+        try { $pick = (Read-Host '  Pick a number, or R for a report (Enter to quit)').Trim() } catch { break }
         if (-not $pick) { break }
+        if ($pick -eq 'r') {
+            # pxd Report (github.com/pxdtek/pxdReport): reads this PC, encrypts the report here and puts it on
+            # pxdtek.com/r for 48 hours. Its script comes through pxdtek.com's GitHub mirror, like the tools above.
+            $report = [pscustomobject]@{ App = [pscustomobject]@{ name = 'pxd Report'; repo = 'pxdtek/pxdReport'; script = 'pxdReport.ps1' }; Code = 'raw/pxdReport/pxdReport.ps1' }
+            $before = $env:PXD_INMEMORY
+            $env:PXD_INMEMORY = '1'
+            try { Invoke-Tool $report } catch { Say "  pxd Report stopped: $($_.Exception.Message)" 'Red' }
+            finally { $env:PXD_INMEMORY = $before }
+            Write-Host ''
+            continue
+        }
         $n = 0
         if (-not [int]::TryParse($pick, [ref]$n) -or $n -lt 1 -or $n -gt $rows.Count) { Say "  There's no [$pick]." 'Yellow'; continue }
         $r = $rows[$n - 1]
